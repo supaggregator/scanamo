@@ -206,18 +206,19 @@ case class Table[V: DynamoFormat](name: String) {
     *
     * It's possible to update one field to the value of another
     * {{{
-    * >>> case class Thing(id: String, mandatory: Int, optional: Option[Int])
+    * >>> case class Thing(id: String, mandatory: Int, optional: Option[Int], other: Int)
     * >>> val things = Table[Thing]("things")
     *
     * >>> LocalDynamoDB.withTable(client)("things")('id -> S) {
     * ...   import com.gu.scanamo.syntax._
     * ...   val operations = for {
-    * ...     _ <- things.put(Thing("a1", 3, None))
-    * ...     updated <- things.update('id -> "a1", set('optional -> 'mandatory))
+    * ...     _ <- things.put(Thing("a1", 3, None, 39))
+    * ...     updated <- things.update('id -> "a1",
+    * ...       set('optional -> 'mandatory) and add('other -> 'mandatory))
     * ...   } yield updated
     * ...   Scanamo.exec(client)(operations)
     * ... }
-    * Right(Thing(a1,3,Some(3)))
+    * Right(Thing(a1,3,Some(3),42))
     * }}}
     */
   def update(key: UniqueKey[_], expression: UpdateExpression): ScanamoOps[Either[DynamoReadError, V]] =

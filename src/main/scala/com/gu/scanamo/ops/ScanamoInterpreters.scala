@@ -45,8 +45,10 @@ object ScanamoInterpreters {
       )
 
     val attributeValues = req.condition.flatMap(_.attributeValues).foldLeft(req.attributeValues)(_ ++ _)
-    if (attributeValues.isEmpty) reqWithoutValues
+    val r = if (attributeValues.isEmpty) reqWithoutValues
     else reqWithoutValues.withExpressionAttributeValues(attributeValues.asJava)
+    println(r)
+    r
   }
 
   def id(client: AmazonDynamoDB) = new (ScanamoOpsA ~> Id) {

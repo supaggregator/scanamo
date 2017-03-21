@@ -34,18 +34,19 @@ private[update] sealed trait LeafUpdateExpression {
 }
 
 object UpdateExpression {
+
   def set[V: DynamoFormat](fieldValue: (Field, V)): UpdateExpression =
     SetExpression(fieldValue._1, fieldValue._2)
-  def setFromAttribute(fields: (Field, Field)): UpdateExpression = {
-    val (to, from) = fields
-    SetExpression.fromAttribute(from, to)
-  }
+  def setFromAttribute(fields: (Field, Field)): UpdateExpression =
+    SetExpression.fromAttribute(fields._2, fields._1)
   def append[V: DynamoFormat](fieldValue: (Field, V)): UpdateExpression =
     AppendExpression(fieldValue._1, fieldValue._2)
   def prepend[V: DynamoFormat](fieldValue: (Field, V)): UpdateExpression =
     PrependExpression(fieldValue._1, fieldValue._2)
   def add[V: DynamoFormat](fieldValue: (Field, V)): UpdateExpression =
     AddExpression(fieldValue._1, fieldValue._2)
+  def addFromAttribute(fields: (Field, Field)): UpdateExpression =
+    AddExpression.fromAttribute(fields._2, fields._1)
   def delete[V: DynamoFormat](fieldValue: (Field, V)): UpdateExpression =
     DeleteExpression(fieldValue._1, fieldValue._2)
   def remove(field: Field): UpdateExpression =
@@ -203,6 +204,18 @@ object AddExpression {
       format.write(value)
     ))
   }
+
+  def fromAttribute(from: Field, to: Field): UpdateExpression =
+    SimpleUpdateExpression(new LeafUpdateExpression {
+      override def expression: String = s"#${to.placeholder} = #${to.placeholder} + #${from.placeholder}"
+
+      override def prefixKeys(prefix: String): LeafUpdateExpression = this
+
+      override val constantValue: Option[(String, AttributeValue)] = None
+      override val attributeNames: Map[String, String] = to.attributeNames ++ from.attributeNames
+      override val updateType: UpdateType = SET
+      override val attributeValue: Option[(String, AttributeValue)] = None
+    })
 }
 
 /*
