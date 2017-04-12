@@ -2,13 +2,12 @@ package com.gu.scanamo
 
 import java.util
 
-import cats.free.Free
-import com.amazonaws.services.dynamodbv2.model.{AttributeValue, QueryRequest, QueryResult, ScanRequest, ScanResult}
+import com.amazonaws.services.dynamodbv2.model.{AttributeValue, QueryResult, ScanResult}
 import com.gu.scanamo.error.DynamoReadError
-import com.gu.scanamo.ops.{ScanamoOps, ScanamoOpsA}
+import com.gu.scanamo.ops.ScanamoOps
 import com.gu.scanamo.request.{ScanamoQueryRequest, ScanamoScanRequest}
 
-import collection.JavaConverters._
+import scala.collection.JavaConverters._
 
 private[scanamo] trait DynamoResultStream[Req, Res] {
   type EvaluationKey = java.util.Map[String, AttributeValue]
@@ -28,7 +27,7 @@ private[scanamo] trait DynamoResultStream[Req, Res] {
         resultsStillToGet = remainingLimit.map(_ - results.length)
         resultList <-
           Option(lastEvaluatedKey(queryResult)).filterNot(_ => resultsStillToGet.exists(_ <= 0)).foldLeft(
-            Free.pure[ScanamoOpsA, List[Either[DynamoReadError, T]]](results)
+            ScanamoOps.pure(results)
           )((rs, k) => for {
             items <- rs
             more <- streamMore(Some(k), resultsStillToGet)

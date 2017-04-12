@@ -1,5 +1,6 @@
 package com.gu.scanamo.ops
 
+import cats.free.Free
 import com.amazonaws.services.dynamodbv2.model._
 import com.gu.scanamo.request._
 
@@ -20,6 +21,7 @@ object ScanamoOps {
 
   import cats.free.Free.liftF
 
+  def pure[T](t: T): ScanamoOps[T] = Free.pure[ScanamoOpsA, T](t)
   def put(req: ScanamoPutRequest): ScanamoOps[PutItemResult] = liftF[ScanamoOpsA, PutItemResult](Put(req))
   def conditionalPut(req: ScanamoPutRequest): ScanamoOps[Either[ConditionalCheckFailedException, PutItemResult]] =
     liftF[ScanamoOpsA, Either[ConditionalCheckFailedException, PutItemResult]](ConditionalPut(req))
