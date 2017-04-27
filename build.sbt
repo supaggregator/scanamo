@@ -3,7 +3,7 @@ organization := "com.gu"
 
 scalaVersion := "2.12.1"
 
-crossScalaVersions := Seq("2.11.8", scalaVersion.value)
+crossScalaVersions := Seq("2.11.9", scalaVersion.value)
 
 resolvers += Resolver.sonatypeRepo("snapshots")
 
@@ -40,7 +40,8 @@ scalacOptions := Seq(
   "-Yno-adapted-args",
   "-Ywarn-dead-code",
   "-Ywarn-numeric-widen",
-  "-Ywarn-value-discard"
+  "-Ywarn-value-discard",
+  "-Ypartial-unification"
 )
 
 dynamoDBLocalDownloadDir := file(".dynamodb-local")

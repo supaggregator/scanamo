@@ -6,6 +6,7 @@ import cats._
 import cats.data.State
 import cats.implicits._
 import com.amazonaws.services.dynamodbv2.model.{AttributeValue, QueryResult, ScanResult}
+import com.gu.scanamo.error.DynamoReadError
 import com.gu.scanamo.ops.{BatchGet, BatchWrite, Query, _}
 import org.scalatest.{FunSuite, Matchers}
 
@@ -30,6 +31,16 @@ class ScanamoFreeTest extends FunSuite with Matchers {
     val numOps = limitedScan.foldMap(countingInterpreter).runEmptyS.value
 
     assert(numOps == 42)
+  }
+
+  test("stuff") {
+    case class Foo(a: Int)
+    import cats.instances.all._
+    def loopThrough(resultsPage: ResultsPage[Foo]): ScanamoOps[List[Either[DynamoReadError, Foo]]] =
+      resultsPage.nextPage().map(_.flatMap(loopThrough).map(_ ++ resultsPage.results))
+        .sequence.map(_.getOrElse(resultsPage.results))
+
+    ScanamoFree.scanFirstPage[Foo]("foo").flatMap(loopThrough)
   }
 }
 

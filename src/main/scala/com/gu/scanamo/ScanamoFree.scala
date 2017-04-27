@@ -73,6 +73,16 @@ object ScanamoFree {
   def scan[T: DynamoFormat](tableName: String): ScanamoOps[List[Either[DynamoReadError, T]]] =
     ScanResultStream.stream[T](ScanamoScanRequest(tableName, None, ScanamoQueryOptions.default))
 
+  def scanFirstPage[T](tableName: String)(implicit format: DynamoFormat[T]): ScanamoOps[ResultsPage[T]] =
+    for {
+      results <- ScanamoOps.scan(ScanamoScanRequest(tableName, None, ScanamoQueryOptions.default))
+    } yield {
+      new ResultsPage[T](results = results.getItems.asScala.toList.map(av =>
+        format.read(new AttributeValue().withM(av))), Option(results.getLastEvaluatedKey),
+        tableName
+      )
+    }
+
   def scanConsistent[T: DynamoFormat](tableName: String): ScanamoOps[List[Either[DynamoReadError, T]]] =
     ScanResultStream.stream[T](ScanamoScanRequest(tableName, None, ScanamoQueryOptions.default.copy(consistent = true)))
 
