@@ -8,7 +8,7 @@ import com.gu.scanamo.query._
 import com.gu.scanamo.request._
 import com.gu.scanamo.update.UpdateExpression
 
-object ScanamoFree {
+private[scanamo] object ScanamoFree {
 
   import cats.instances.list._
   import cats.syntax.traverse._

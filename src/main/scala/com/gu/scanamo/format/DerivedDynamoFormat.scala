@@ -1,13 +1,13 @@
-package com.gu.scanamo
+package com.gu.scanamo.format
 
 import cats.data.{NonEmptyList, Validated}
 import cats.syntax.either._
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import com.gu.scanamo.error._
 import shapeless._
-import shapeless.labelled._
+import shapeless.labelled.{field, _}
 
-import collection.JavaConverters._
+import scala.collection.JavaConverters._
 
 trait DerivedDynamoFormat {
   type ValidatedPropertiesError[T] = Validated[InvalidPropertiesError, T]
