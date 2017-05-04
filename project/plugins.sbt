@@ -1,11 +1,11 @@
-addSbtPlugin("com.localytics" % "sbt-dynamodb" % "1.5.3")
+addSbtPlugin("com.localytics" % "sbt-dynamodb" % "1.5.5")
 
 addSbtPlugin("com.github.tkawachi" % "sbt-doctest" % "0.4.1")
 
 resolvers += "jgit-repo" at "http://download.eclipse.org/jgit/maven"
-addSbtPlugin("com.typesafe.sbt" % "sbt-ghpages" % "0.5.4")
+addSbtPlugin("com.typesafe.sbt" % "sbt-ghpages" % "0.6.0")
 addSbtPlugin("com.typesafe.sbt" % "sbt-site" % "1.2.0")
-addSbtPlugin("com.fortysevendeg"  % "sbt-microsites" % "0.4.0")
+addSbtPlugin("com.47deg"  % "sbt-microsites" % "0.5.7")
 
 addSbtPlugin("com.github.gseitz" % "sbt-release" % "1.0.4")
 addSbtPlugin("org.xerial.sbt" % "sbt-sonatype" % "1.1")

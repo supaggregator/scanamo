@@ -1,14 +1,14 @@
 name := "scanamo"
 organization := "com.gu"
 
-scalaVersion := "2.12.1"
+scalaVersion := "2.12.2"
 
-crossScalaVersions := Seq("2.11.8", scalaVersion.value)
+crossScalaVersions := Seq("2.11.11", scalaVersion.value)
 
 resolvers += Resolver.sonatypeRepo("snapshots")
 
 libraryDependencies ++= Seq(
-  "com.amazonaws" % "aws-java-sdk-dynamodb" % "1.11.98",
+  "com.amazonaws" % "aws-java-sdk-dynamodb" % "1.11.125",
   "com.chuusai" %% "shapeless" % "2.3.2",
   "org.typelevel" %% "cats-free" % "0.9.0",
   "com.github.mpilquist" %% "simulacrum" % "0.10.0",
@@ -19,10 +19,10 @@ libraryDependencies ++= Seq(
 
   // Use Joda for custom conversion example
   "org.joda" % "joda-convert" % "1.8.1" % Provided,
-  "joda-time" % "joda-time" % "2.9.7" % Test,
+  "joda-time" % "joda-time" % "2.9.9" % Test,
 
-  "org.scalatest" %% "scalatest" % "3.0.1" % Test,
-  "org.scalacheck" %% "scalacheck" % "1.13.4" % Test
+  "org.scalatest" %% "scalatest" % "3.0.3" % Test,
+  "org.scalacheck" %% "scalacheck" % "1.13.5" % Test
 )
 // for simulacrum
 addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full)
@@ -53,11 +53,10 @@ tut := tut.dependsOn(startDynamoDBLocal).value
 
 tut <<= (tut, stopDynamoDBLocal){ (tut, stop) => tut.doFinally(stop)}
 
-enablePlugins(MicrositesPlugin, SiteScaladocPlugin)
+enablePlugins(MicrositesPlugin, SiteScaladocPlugin, GhpagesPlugin)
 
 includeFilter in makeSite := "*.html" | "*.css" | "*.png" | "*.jpg" | "*.gif" | "*.js" | "*.yml"
-ghpages.settings
-com.typesafe.sbt.SbtGhPages.GhPagesKeys.ghpagesNoJekyll := false
+ghpagesNoJekyll := false
 git.remoteRepo := "git@github.com:guardian/scanamo.git"
 
 doctestMarkdownEnabled := true

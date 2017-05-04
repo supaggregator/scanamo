@@ -2,7 +2,6 @@ package com.gu.scanamo.error
 
 import cats.{Semigroup, Show}
 import cats.data.NonEmptyList
-import cats.instances.list._
 import com.amazonaws.services.dynamodbv2.model.{AttributeValue, ConditionalCheckFailedException}
 
 sealed abstract class ScanamoError

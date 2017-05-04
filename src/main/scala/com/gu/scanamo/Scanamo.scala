@@ -1,7 +1,7 @@
 package com.gu.scanamo
 
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
-import com.amazonaws.services.dynamodbv2.model.{BatchWriteItemResult, DeleteItemResult, PutItemResult}
+import com.amazonaws.services.dynamodbv2.model.{BatchWriteItemResult, DeleteItemResult}
 import com.gu.scanamo.error.DynamoReadError
 import com.gu.scanamo.ops.{ScanamoInterpreters, ScanamoOps}
 import com.gu.scanamo.query._
@@ -34,7 +34,7 @@ object Scanamo {
     * Some(Right(Farmer(McDonald,156,Farm(List(sheep, cow)))))
     * }}}
     */
-  def put[T: DynamoFormat](client: AmazonDynamoDB)(tableName: String)(item: T): PutItemResult =
+  def put[T: DynamoFormat](client: AmazonDynamoDB)(tableName: String)(item: T): Unit =
     exec(client)(ScanamoFree.put(tableName)(item))
 
   /**
@@ -97,7 +97,6 @@ object Scanamo {
   /**
     * {{{
     * >>> case class City(name: String, country: String)
-    * >>> val cityTable = Table[City]("asyncCities")
     *
     * >>> import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType._
     * >>> val client = LocalDynamoDB.client()
@@ -215,7 +214,6 @@ object Scanamo {
     *
     * {{{
     * >>> case class Forecast(location: String, weather: String)
-    * >>> val forecast = Table[Forecast]("forecast")
     *
     * >>> val client = LocalDynamoDB.client()
     * >>> import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType._
@@ -340,11 +338,14 @@ object Scanamo {
     *
     * >>> val client = LocalDynamoDB.client()
     * >>> import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType._
-    * >>> val tableResult = LocalDynamoDB.createTable(client)("animals")('species -> S, 'number -> N)
+    * >>> val _ = LocalDynamoDB.createTable(client)("animals")('species -> S, 'number -> N)
+    * >>> Scanamo.put(client)("animals")(Animal("Wolf", 1))
+    * ()
     *
-    * >>> val r1 = Scanamo.put(client)("animals")(Animal("Wolf", 1))
+    * >>> (1 to 3).foreach(i => Scanamo.put(client)("animals")(Animal("Pig", i)))
+    * ()
+    *
     * >>> import com.gu.scanamo.query._
-    * >>> val r2 = for { i <- 1 to 3 } Scanamo.put(client)("animals")(Animal("Pig", i))
     * >>> Scanamo.query[Animal](client)("animals")(Query(KeyEquals('species, "Pig")))
     * List(Right(Animal(Pig,1)), Right(Animal(Pig,2)), Right(Animal(Pig,3)))
     * }}}
