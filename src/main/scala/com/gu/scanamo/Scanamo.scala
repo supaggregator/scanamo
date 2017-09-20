@@ -34,6 +34,7 @@ object Scanamo {
     * Some(Right(Farmer(McDonald,156,Farm(List(sheep, cow)))))
     * }}}
     */
+  @deprecated("Use `Scanamo.exec` with `put` on `Table`", "1.0")
   def put[T: DynamoFormat](client: AmazonDynamoDB)(tableName: String)(item: T): PutItemResult =
     exec(client)(ScanamoFree.put(tableName)(item))
 
@@ -53,6 +54,7 @@ object Scanamo {
     * 100
     * }}}
     */
+  @deprecated("Use `Scanamo.exec` with `putAll` on `Table`", "1.0")
   def putAll[T: DynamoFormat](client: AmazonDynamoDB)(tableName: String)(items: Set[T]): List[BatchWriteItemResult] =
     exec(client)(ScanamoFree.putAll(tableName)(items))
 
@@ -90,6 +92,7 @@ object Scanamo {
     * Some(Right(Engine(Thomas,1)))
     * }}}
     */
+  @deprecated("Use `Scanamo.exec` with `get` on `Table`", "1.0")
   def get[T: DynamoFormat](client: AmazonDynamoDB)(tableName: String)(key: UniqueKey[_])
     : Option[Either[DynamoReadError, T]] =
     exec(client)(ScanamoFree.get[T](tableName)(key))
@@ -108,6 +111,7 @@ object Scanamo {
     * Some(Right(City(Nashville,US)))
     * }}}
     */
+  @deprecated("Use `Scanamo.exec` with `consitently.get` on `Table`", "1.0")
   def getWithConsistency[T: DynamoFormat](client: AmazonDynamoDB)(tableName: String)(key: UniqueKey[_])
     : Option[Either[DynamoReadError, T]] =
     exec(client)(ScanamoFree.getWithConsistency[T](tableName)(key))
@@ -155,6 +159,7 @@ object Scanamo {
     * Set(Right(Doctor(McCoy,9)), Right(Doctor(Ecclestone,11)))
     * }}}
     */
+  @deprecated("Use `Scanamo.exec` with `getAll` on `Table`", "1.0")
   def getAll[T: DynamoFormat](client: AmazonDynamoDB)(tableName: String)(keys: UniqueKeys[_])
     : Set[Either[DynamoReadError, T]] =
     exec(client)(ScanamoFree.getAll(tableName)(keys))
@@ -179,6 +184,7 @@ object Scanamo {
     * None
     * }}}
     */
+  @deprecated("Use `Scanamo.exec` with `delete` on `Table`", "1.0")
   def delete(client: AmazonDynamoDB)(tableName: String)(key: UniqueKey[_]): DeleteItemResult =
     exec(client)(ScanamoFree.delete(tableName)(key))
 
@@ -206,6 +212,7 @@ object Scanamo {
     * List()
     * }}}
     */
+  @deprecated("Use `Scanamo.exec` with `deleteAll` on `Table`", "1.0")
   def deleteAll(client: AmazonDynamoDB)(tableName: String)(items: UniqueKeys[_]): List[BatchWriteItemResult] =
     exec(client)(ScanamoFree.deleteAll(tableName)(items))
 
@@ -227,6 +234,7 @@ object Scanamo {
     * List(Right(Forecast(London,Sun)))
     * }}}
     */
+  @deprecated("Use `Scanamo.exec` with `update` on `Table`", "1.0")
   def update[V: DynamoFormat](client: AmazonDynamoDB)(tableName: String)(key: UniqueKey[_], expression: UpdateExpression): Either[DynamoReadError, V] =
     exec(client)(ScanamoFree.update[V](tableName)(key)(expression))
 
@@ -261,6 +269,7 @@ object Scanamo {
     * 100
     * }}}
     */
+  @deprecated("Use `Scanamo.exec` with `scan` on `Table`", "1.0")
   def scan[T: DynamoFormat](client: AmazonDynamoDB)(tableName: String)
     : List[Either[DynamoReadError, T]] =
     exec(client)(ScanamoFree.scan(tableName))
@@ -282,6 +291,7 @@ object Scanamo {
     * List(Right(Bear(Pooh,honey)))
     * }}}
     */
+  @deprecated("Use `Scanamo.exec` with `limit(n).scan()` on `Table`", "1.0")
   def scanWithLimit[T: DynamoFormat](client: AmazonDynamoDB)(tableName: String, limit: Int)
     : List[Either[DynamoReadError, T]] =
     exec(client)(ScanamoFree.scanWithLimit(tableName, limit))
@@ -303,6 +313,7 @@ object Scanamo {
     * List(Right(Bear(Pooh,honey,Some(Winnie))))
     * }}}
     */
+  @deprecated("Use `Scanamo.exec` with `scan()` on `Index`", "1.0")
   def scanIndex[T: DynamoFormat](client: AmazonDynamoDB)(tableName: String, indexName: String)
   : List[Either[DynamoReadError, T]] =
     exec(client)(ScanamoFree.scanIndex(tableName, indexName))
