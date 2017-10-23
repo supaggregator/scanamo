@@ -47,4 +47,45 @@ class ScanamoTest extends org.scalatest.FunSpec with org.scalatest.Matchers {
       Scanamo.exec(client)(ops) should equal(Some(Right(City("Nashville", "US"))))
     }
   }
+
+  it("should handle complex filters") {
+
+    import com.gu.scanamo.syntax._
+    import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType._
+
+    case class Game(
+      userId: String,
+      rangeKey: String,
+      gameId: String,
+      numTries: Option[Int],
+      numCorrect: Option[Int],
+      score: Option[Int],
+      responseTime: Option[Long]
+    )
+    val table = Table[Game]("games")
+
+    val client = LocalDynamoDB.client()
+    LocalDynamoDB.usingTable(client)("games")('userId -> S, 'rangeKey -> S) {
+      val games = Scanamo.exec(client)(for {
+        _ <- table.putAll(Set(
+          Game("user1", "1", "game1", Some(6), Some(1), Some(1), Some(1)),
+          Game("user1", "2", "game2", Some(3), Some(1), Some(1), Some(1))
+        ))
+        results <- table
+          .filter(
+            attributeExists('numTries)
+              and attributeExists('numCorrect)
+              and attributeExists('score)
+              and attributeExists('responseTime)
+              and ('gameId -> "game1")
+              and 'responseTime > 0
+              and 'numTries > 5
+
+          )
+          .limit(10)
+          .query('userId -> "user1")
+      } yield results).flatMap(_.toOption)
+      games shouldBe (List(Game("user1", "1", "game1", Some(6), Some(1), Some(1), Some(1))))
+    }
+  }
 }
