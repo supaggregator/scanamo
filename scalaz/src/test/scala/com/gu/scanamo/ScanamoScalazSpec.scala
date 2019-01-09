@@ -11,6 +11,7 @@ import org.scanamo.auto._
 import scalaz.ioeffect.RTS
 import scalaz._
 import Scalaz._
+import org.scanamo.result.ScanamoGetResult
 import shims._
 
 class ScanamoScalazSpec extends FunSpec with Matchers with BeforeAndAfterAll with RTS {
@@ -35,7 +36,7 @@ class ScanamoScalazSpec extends FunSpec with Matchers with BeforeAndAfterAll wit
       } yield f
 
       unsafePerformIO(ScanamoScalaz.exec(client)(result)) should equal(
-        Some(Right(Farmer("McDonald", 156, Farm(List("sheep", "cow")))))
+        Right(ScanamoGetResult(Farmer("McDonald", 156, Farm(List("sheep", "cow")))))
       )
     }
   }
@@ -54,7 +55,7 @@ class ScanamoScalazSpec extends FunSpec with Matchers with BeforeAndAfterAll wit
       } yield (r1, r1 == r2)
 
       unsafePerformIO(ScanamoScalaz.exec(client)(result)) should equal(
-        (Some(Right(Farmer("Maggot", 75, Farm(List("dog"))))), true)
+        (Right(ScanamoGetResult(Farmer("Maggot", 75, Farm(List("dog"))))), true)
       )
     }
 
@@ -68,7 +69,7 @@ class ScanamoScalazSpec extends FunSpec with Matchers with BeforeAndAfterAll wit
         e <- engines.get('name -> "Thomas" and 'number -> 1)
       } yield e
 
-      unsafePerformIO(ScanamoScalaz.exec(client)(result)) should equal(Some(Right(Engine("Thomas", 1))))
+      unsafePerformIO(ScanamoScalaz.exec(client)(result)) should equal(Right(ScanamoGetResult(Engine("Thomas", 1))))
     }
   }
 
@@ -82,7 +83,7 @@ class ScanamoScalazSpec extends FunSpec with Matchers with BeforeAndAfterAll wit
         c <- cities.consistently.get('name -> "Nashville")
       } yield c
 
-      unsafePerformIO(ScanamoScalaz.exec(client)(result)) should equal(Some(Right(City("Nashville", "US"))))
+      unsafePerformIO(ScanamoScalaz.exec(client)(result)) should equal(Right(ScanamoGetResult(City("Nashville", "US"))))
     }
   }
 
@@ -99,7 +100,7 @@ class ScanamoScalazSpec extends FunSpec with Matchers with BeforeAndAfterAll wit
           _ <- farmers.delete('name -> "McGregor")
           f <- farmers.get('name -> "McGregor")
         } yield f
-      }) should equal(None)
+      }) should equal(Right(ScanamoGetResult.Empty))
     }
   }
 
@@ -517,7 +518,7 @@ class ScanamoScalazSpec extends FunSpec with Matchers with BeforeAndAfterAll wit
       } yield farmerWithNewStock
 
       unsafePerformIO(ScanamoScalaz.exec(client)(farmerOps)) should equal(
-        Some(Right(Farmer("McDonald", 156, Farm(List("sheep", "chicken")))))
+        Right(ScanamoGetResult(Farmer("McDonald", 156, Farm(List("sheep", "chicken")))))
       )
     }
   }
@@ -538,7 +539,7 @@ class ScanamoScalazSpec extends FunSpec with Matchers with BeforeAndAfterAll wit
         farmerButch <- farmersTable.get('name -> "Butch")
       } yield farmerButch
       unsafePerformIO(ScanamoScalaz.exec(client)(farmerOps)) should equal(
-        Some(Right(Farmer("Butch", 57, Farm(List("chicken")))))
+        Right(ScanamoGetResult(Farmer("Butch", 57, Farm(List("chicken")))))
       )
     }
   }

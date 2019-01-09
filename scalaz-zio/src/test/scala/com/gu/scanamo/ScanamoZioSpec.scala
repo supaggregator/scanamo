@@ -11,6 +11,7 @@ import org.scanamo.query._
 import org.scanamo.syntax._
 import org.scanamo.auto._
 import cats.implicits._
+import org.scanamo.result.ScanamoGetResult
 import scalaz.zio.{IO, RTS}
 
 class ScanamoZioSpec extends FunSpec with Matchers {
@@ -33,7 +34,7 @@ class ScanamoZioSpec extends FunSpec with Matchers {
       } yield f
 
       unsafeRun(ScanamoZio.exec(client)(result)) should equal(
-        Some(Right(Farmer("McDonald", 156, Farm(List("sheep", "cow")))))
+        Right(ScanamoGetResult(Farmer("McDonald", 156, Farm(List("sheep", "cow")))))
       )
     }
   }
@@ -52,7 +53,7 @@ class ScanamoZioSpec extends FunSpec with Matchers {
       } yield (r1, r1 == r2)
 
       unsafeRun(ScanamoZio.exec(client)(result)) should equal(
-        (Some(Right(Farmer("Maggot", 75, Farm(List("dog"))))), true)
+        (Right(ScanamoGetResult(Farmer("Maggot", 75, Farm(List("dog"))))), true)
       )
     }
 
@@ -66,7 +67,7 @@ class ScanamoZioSpec extends FunSpec with Matchers {
         e <- engines.get('name -> "Thomas" and 'number -> 1)
       } yield e
 
-      unsafeRun(ScanamoZio.exec(client)(result)) should equal(Some(Right(Engine("Thomas", 1))))
+      unsafeRun(ScanamoZio.exec(client)(result)) should equal(Right(ScanamoGetResult(Engine("Thomas", 1))))
     }
   }
 
@@ -80,7 +81,7 @@ class ScanamoZioSpec extends FunSpec with Matchers {
         c <- cities.consistently.get('name -> "Nashville")
       } yield c
 
-      unsafeRun(ScanamoZio.exec(client)(result)) should equal(Some(Right(City("Nashville", "US"))))
+      unsafeRun(ScanamoZio.exec(client)(result)) should equal(Right(ScanamoGetResult(City("Nashville", "US"))))
     }
   }
 
@@ -97,7 +98,7 @@ class ScanamoZioSpec extends FunSpec with Matchers {
           _ <- farmers.delete('name -> "McGregor")
           f <- farmers.get('name -> "McGregor")
         } yield f
-      }) should equal(None)
+      }) should equal(Right(ScanamoGetResult.Empty))
     }
   }
 
@@ -511,7 +512,7 @@ class ScanamoZioSpec extends FunSpec with Matchers {
       } yield farmerWithNewStock
 
       unsafeRun(ScanamoZio.exec(client)(farmerOps)) should equal(
-        Some(Right(Farmer("McDonald", 156, Farm(List("sheep", "chicken")))))
+        Right(ScanamoGetResult(Farmer("McDonald", 156, Farm(List("sheep", "chicken")))))
       )
     }
   }
@@ -532,7 +533,7 @@ class ScanamoZioSpec extends FunSpec with Matchers {
         farmerButch <- farmersTable.get('name -> "Butch")
       } yield farmerButch
       unsafeRun(ScanamoZio.exec(client)(farmerOps)) should equal(
-        Some(Right(Farmer("Butch", 57, Farm(List("chicken")))))
+        Right(ScanamoGetResult(Farmer("Butch", 57, Farm(List("chicken")))))
       )
     }
   }

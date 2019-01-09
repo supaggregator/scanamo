@@ -1,6 +1,7 @@
 package org.scanamo
 
 import com.amazonaws.services.dynamodbv2.model.{BatchWriteItemResult, DeleteItemResult, QueryResult, ScanResult}
+import org.scanamo.result.ScanamoGetResult
 import org.scanamo.DynamoResultStream.{QueryResultStream, ScanResultStream}
 import org.scanamo.error.DynamoReadError
 import org.scanamo.ops.ScanamoOps
@@ -38,7 +39,7 @@ case class Table[V: DynamoFormat](name: String) {
 
   def put(v: V): ScanamoOps[Option[Either[DynamoReadError, V]]] = ScanamoFree.put(name)(v)
   def putAll(vs: Set[V]): ScanamoOps[List[BatchWriteItemResult]] = ScanamoFree.putAll(name)(vs)
-  def get(key: UniqueKey[_]): ScanamoOps[Option[Either[DynamoReadError, V]]] = ScanamoFree.get[V](name)(key)
+  def get(key: UniqueKey[_]): ScanamoOps[Either[DynamoReadError, ScanamoGetResult[V]]] = ScanamoFree.get[V](name)(key)
   def getAll(keys: UniqueKeys[_]): ScanamoOps[Set[Either[DynamoReadError, V]]] = ScanamoFree.getAll[V](name)(keys)
   def delete(key: UniqueKey[_]): ScanamoOps[DeleteItemResult] = ScanamoFree.delete(name)(key)
 
@@ -332,7 +333,7 @@ case class Table[V: DynamoFormat](name: String) {
     * ...   Scanamo.exec(client)(ops)
     * ... }
     * >>> get
-    * Some(Right(City(US,Nashville)))
+    * Right(ScanamoSingleGetResult(City(US,Nashville)))
     *
     * >>> scan
     * List(Right(City(US,Nashville)), Right(City(IT,Rome)), Right(City(IT,Siena)), Right(City(TZ,Dar es Salaam)))
@@ -366,7 +367,7 @@ case class Table[V: DynamoFormat](name: String) {
     * ...   } yield farmerWithNewStock
     * ...   Scanamo.exec(client)(farmerOps)
     * ... }
-    * Some(Right(Farmer(McDonald,156,Farm(List(sheep, chicken),30))))
+    * Right(ScanamoSingleGetResult(Farmer(McDonald,156,Farm(List(sheep, chicken),30))))
     *
     * >>> case class Letter(roman: String, greek: String)
     * >>> LocalDynamoDB.withRandomTable(client)('roman -> S) { t =>
@@ -498,7 +499,7 @@ case class Table[V: DynamoFormat](name: String) {
     * ...   } yield farmerWithNewStock
     * ...   Scanamo.exec(client)(farmerOps)
     * ... }
-    * Some(Right(Farmer(McDonald,156,Farm(List(gerbil, hamster, squirrel),20))))
+    * Right(ScanamoSingleGetResult(Farmer(McDonald,156,Farm(List(gerbil, hamster, squirrel),20))))
     * }}}
     */
   def given[T: ConditionExpression](condition: T) = ConditionalOperation[V, T](name, condition)
@@ -755,7 +756,7 @@ private[scanamo] case class ConsistentlyReadTable[V: DynamoFormat](tableName: St
   def query(query: Query[_]): ScanamoOps[List[Either[DynamoReadError, V]]] =
     TableWithOptions(tableName, ScanamoQueryOptions.default).consistently.query(query)
 
-  def get(key: UniqueKey[_]): ScanamoOps[Option[Either[DynamoReadError, V]]] =
+  def get(key: UniqueKey[_]): ScanamoOps[Either[DynamoReadError, ScanamoGetResult[V]]] =
     ScanamoFree.getWithConsistency[V](tableName)(key)
   def getAll(keys: UniqueKeys[_]): ScanamoOps[Set[Either[DynamoReadError, V]]] =
     ScanamoFree.getAllWithConsistency[V](tableName)(keys)

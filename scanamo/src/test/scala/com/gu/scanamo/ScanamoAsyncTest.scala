@@ -9,6 +9,7 @@ import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType._
 import org.scanamo.query._
 import org.scanamo.syntax._
 import org.scanamo.auto._
+import org.scanamo.result.ScanamoGetResult
 
 class ScanamoAsyncTest extends FunSpec with Matchers with BeforeAndAfterAll with ScalaFutures {
   implicit val defaultPatience =
@@ -35,7 +36,7 @@ class ScanamoAsyncTest extends FunSpec with Matchers with BeforeAndAfterAll with
       } yield f
 
       ScanamoAsync.exec(client)(result).futureValue should equal(
-        Some(Right(Farmer("McDonald", 156, Farm(List("sheep", "cow")))))
+        Right(ScanamoGetResult(Farmer("McDonald", 156, Farm(List("sheep", "cow")))))
       )
     }
   }
@@ -54,7 +55,7 @@ class ScanamoAsyncTest extends FunSpec with Matchers with BeforeAndAfterAll with
       } yield (r1, r1 == r2)
 
       ScanamoAsync.exec(client)(result).futureValue should equal(
-        (Some(Right(Farmer("Maggot", 75, Farm(List("dog"))))), true)
+        (Right(ScanamoGetResult(Farmer("Maggot", 75, Farm(List("dog"))))), true)
       )
     }
 
@@ -68,7 +69,7 @@ class ScanamoAsyncTest extends FunSpec with Matchers with BeforeAndAfterAll with
         e <- engines.get('name -> "Thomas" and 'number -> 1)
       } yield e
 
-      ScanamoAsync.exec(client)(result).futureValue should equal(Some(Right(Engine("Thomas", 1))))
+      ScanamoAsync.exec(client)(result).futureValue should equal(Right(ScanamoGetResult(Engine("Thomas", 1))))
     }
   }
 
@@ -82,7 +83,7 @@ class ScanamoAsyncTest extends FunSpec with Matchers with BeforeAndAfterAll with
         c <- cities.consistently.get('name -> "Nashville")
       } yield c
 
-      ScanamoAsync.exec(client)(result).futureValue should equal(Some(Right(City("Nashville", "US"))))
+      ScanamoAsync.exec(client)(result).futureValue should equal(Right(ScanamoGetResult(City("Nashville", "US"))))
     }
   }
 
@@ -101,7 +102,7 @@ class ScanamoAsyncTest extends FunSpec with Matchers with BeforeAndAfterAll with
             f <- farmers.get('name -> "McGregor")
           } yield f
         }
-        .futureValue should equal(None)
+        .futureValue should equal(Right(ScanamoGetResult.Empty))
     }
   }
 
@@ -525,7 +526,7 @@ class ScanamoAsyncTest extends FunSpec with Matchers with BeforeAndAfterAll with
       } yield farmerWithNewStock
 
       ScanamoAsync.exec(client)(farmerOps).futureValue should equal(
-        Some(Right(Farmer("McDonald", 156, Farm(List("sheep", "chicken")))))
+        Right(ScanamoGetResult(Farmer("McDonald", 156, Farm(List("sheep", "chicken")))))
       )
     }
   }
@@ -546,7 +547,7 @@ class ScanamoAsyncTest extends FunSpec with Matchers with BeforeAndAfterAll with
         farmerButch <- farmersTable.get('name -> "Butch")
       } yield farmerButch
       ScanamoAsync.exec(client)(farmerOps).futureValue should equal(
-        Some(Right(Farmer("Butch", 57, Farm(List("chicken")))))
+        Right(ScanamoGetResult(Farmer("Butch", 57, Farm(List("chicken")))))
       )
     }
   }

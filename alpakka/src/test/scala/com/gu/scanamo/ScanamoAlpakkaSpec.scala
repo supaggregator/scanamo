@@ -14,6 +14,7 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Millis, Seconds, Span}
 import org.scalatest.{BeforeAndAfterAll, FunSpecLike, Matchers}
 import cats.implicits._
+import org.scanamo.result.ScanamoGetResult
 
 class ScanamoAlpakkaSpec extends FunSpecLike with BeforeAndAfterAll with Matchers with ScalaFutures {
 
@@ -54,7 +55,7 @@ class ScanamoAlpakkaSpec extends FunSpecLike with BeforeAndAfterAll with Matcher
       } yield f
 
       ScanamoAlpakka.exec(alpakkaClient)(result).futureValue should equal(
-        Some(Right(Farmer("McDonald", 156, Farm(List("sheep", "cow")))))
+        Right(ScanamoGetResult(Farmer("McDonald", 156, Farm(List("sheep", "cow")))))
       )
     }
   }
@@ -73,7 +74,7 @@ class ScanamoAlpakkaSpec extends FunSpecLike with BeforeAndAfterAll with Matcher
       } yield (r1, r1 == r2)
 
       ScanamoAlpakka.exec(alpakkaClient)(result).futureValue should equal(
-        (Some(Right(Farmer("Maggot", 75, Farm(List("dog"))))), true)
+        (Right(ScanamoGetResult(Farmer("Maggot", 75, Farm(List("dog"))))), true)
       )
     }
 
@@ -87,7 +88,7 @@ class ScanamoAlpakkaSpec extends FunSpecLike with BeforeAndAfterAll with Matcher
         e <- engines.get('name -> "Thomas" and 'number -> 1)
       } yield e
 
-      ScanamoAlpakka.exec(alpakkaClient)(result).futureValue should equal(Some(Right(Engine("Thomas", 1))))
+      ScanamoAlpakka.exec(alpakkaClient)(result).futureValue should equal(Right(ScanamoGetResult(Engine("Thomas", 1))))
     }
   }
 
@@ -101,7 +102,7 @@ class ScanamoAlpakkaSpec extends FunSpecLike with BeforeAndAfterAll with Matcher
         c <- cities.consistently.get('name -> "Nashville")
       } yield c
 
-      ScanamoAlpakka.exec(alpakkaClient)(result).futureValue should equal(Some(Right(City("Nashville", "US"))))
+      ScanamoAlpakka.exec(alpakkaClient)(result).futureValue should equal(Right(ScanamoGetResult(City("Nashville", "US"))))
     }
   }
 
@@ -120,7 +121,7 @@ class ScanamoAlpakkaSpec extends FunSpecLike with BeforeAndAfterAll with Matcher
             f <- farmers.get('name -> "McGregor")
           } yield f
         }
-        .futureValue should equal(None)
+        .futureValue should equal(Right(ScanamoGetResult.Empty))
     }
   }
 
@@ -546,7 +547,7 @@ class ScanamoAlpakkaSpec extends FunSpecLike with BeforeAndAfterAll with Matcher
       } yield farmerWithNewStock
 
       ScanamoAlpakka.exec(alpakkaClient)(farmerOps).futureValue should equal(
-        Some(Right(Farmer("McDonald", 156, Farm(List("sheep", "chicken")))))
+        Right(ScanamoGetResult(Farmer("McDonald", 156, Farm(List("sheep", "chicken")))))
       )
     }
   }
@@ -567,7 +568,7 @@ class ScanamoAlpakkaSpec extends FunSpecLike with BeforeAndAfterAll with Matcher
         farmerButch <- farmersTable.get('name -> "Butch")
       } yield farmerButch
       ScanamoAlpakka.exec(alpakkaClient)(farmerOps).futureValue should equal(
-        Some(Right(Farmer("Butch", 57, Farm(List("chicken")))))
+        Right(ScanamoGetResult(Farmer("Butch", 57, Farm(List("chicken")))))
       )
     }
   }

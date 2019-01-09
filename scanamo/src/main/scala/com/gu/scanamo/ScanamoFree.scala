@@ -1,6 +1,7 @@
 package org.scanamo
 
 import com.amazonaws.services.dynamodbv2.model.{PutRequest, WriteRequest, _}
+import org.scanamo.result.ScanamoGetResult
 import org.scanamo.DynamoResultStream.{QueryResultStream, ScanResultStream}
 import org.scanamo.error.DynamoReadError
 import org.scanamo.ops.ScanamoOps
@@ -63,19 +64,28 @@ object ScanamoFree {
 
   def get[T](
     tableName: String
-  )(key: UniqueKey[_])(implicit ft: DynamoFormat[T]): ScanamoOps[Option[Either[DynamoReadError, T]]] =
+  )(
+    key: UniqueKey[_]
+  )(implicit ft: DynamoFormat[T]): ScanamoOps[Either[DynamoReadError, ScanamoGetResult[T]]] =
     for {
       res <- ScanamoOps.get(new GetItemRequest().withTableName(tableName).withKey(key.asAVMap.asJava))
-    } yield Option(res.getItem).map(read[T])
+  } yield Option(res.getItem)
+      .map(read[T](_).map(ScanamoGetResult(_)))
+      .getOrElse(Right(ScanamoGetResult.Empty))
 
   def getWithConsistency[T](
     tableName: String
-  )(key: UniqueKey[_])(implicit ft: DynamoFormat[T]): ScanamoOps[Option[Either[DynamoReadError, T]]] =
+  )(
+    key: UniqueKey[_]
+  )(implicit ft: DynamoFormat[T]) : ScanamoOps[Either[DynamoReadError, ScanamoGetResult[T]]] =
     for {
       res <- ScanamoOps.get(
         new GetItemRequest().withTableName(tableName).withKey(key.asAVMap.asJava).withConsistentRead(true)
       )
-    } yield Option(res.getItem).map(read[T])
+    } yield Option(res.getItem)
+      .map(read[T](_).map(ScanamoGetResult(_)))
+      .getOrElse(Right(ScanamoGetResult.Empty))
+
 
   def getAll[T: DynamoFormat](tableName: String)(keys: UniqueKeys[_]): ScanamoOps[Set[Either[DynamoReadError, T]]] =
     keys.asAVMap

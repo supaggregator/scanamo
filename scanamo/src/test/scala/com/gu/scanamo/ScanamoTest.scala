@@ -12,6 +12,7 @@ import org.scanamo.ops.ScanamoOps
 import org.scanamo.query._
 import org.scanamo.syntax._
 import org.scanamo.auto._
+import org.scanamo.result.ScanamoGetResult
 
 class ScanamoTest extends org.scalatest.FunSpec with org.scalatest.Matchers {
 
@@ -30,7 +31,7 @@ class ScanamoTest extends org.scalatest.FunSpec with org.scalatest.Matchers {
       } yield f
 
       Scanamo.exec(client)(result) should equal(
-        Some(Right(Farmer("McDonald", 156, Farm(List("sheep", "cow")))))
+        Right(ScanamoGetResult(Farmer("McDonald", 156, Farm(List("sheep", "cow")))))
       )
     }
   }
@@ -49,7 +50,7 @@ class ScanamoTest extends org.scalatest.FunSpec with org.scalatest.Matchers {
       } yield (r1, r1 == r2)
 
       Scanamo.exec(client)(result) should equal(
-        (Some(Right(Farmer("Maggot", 75, Farm(List("dog"))))), true)
+        (Right(ScanamoGetResult(Farmer("Maggot", 75, Farm(List("dog"))))), true)
       )
     }
 
@@ -63,7 +64,7 @@ class ScanamoTest extends org.scalatest.FunSpec with org.scalatest.Matchers {
         e <- engines.get('name -> "Thomas" and 'number -> 1)
       } yield e
 
-      Scanamo.exec(client)(result) should equal(Some(Right(Engine("Thomas", 1))))
+      Scanamo.exec(client)(result) should equal(Right(ScanamoGetResult(Engine("Thomas", 1))))
     }
   }
 
@@ -77,7 +78,7 @@ class ScanamoTest extends org.scalatest.FunSpec with org.scalatest.Matchers {
         c <- cities.consistently.get('name -> "Nashville")
       } yield c
 
-      Scanamo.exec(client)(result) should equal(Some(Right(City("Nashville", "US"))))
+      Scanamo.exec(client)(result) should equal(Right(ScanamoGetResult(City("Nashville", "US"))))
     }
   }
 
@@ -94,7 +95,7 @@ class ScanamoTest extends org.scalatest.FunSpec with org.scalatest.Matchers {
           _ <- farmers.delete('name -> "McGregor")
           f <- farmers.get('name -> "McGregor")
         } yield f
-      } should equal(None)
+      } should equal(Right(ScanamoGetResult.Empty))
     }
   }
 
@@ -508,7 +509,7 @@ class ScanamoTest extends org.scalatest.FunSpec with org.scalatest.Matchers {
       } yield farmerWithNewStock
 
       Scanamo.exec(client)(farmerOps) should equal(
-        Some(Right(Farmer("McDonald", 156, Farm(List("sheep", "chicken")))))
+        Right(ScanamoGetResult(Farmer("McDonald", 156, Farm(List("sheep", "chicken")))))
       )
     }
   }
@@ -529,7 +530,7 @@ class ScanamoTest extends org.scalatest.FunSpec with org.scalatest.Matchers {
         farmerButch <- farmersTable.get('name -> "Butch")
       } yield farmerButch
       Scanamo.exec(client)(farmerOps) should equal(
-        Some(Right(Farmer("Butch", 57, Farm(List("chicken")))))
+        Right(ScanamoGetResult(Farmer("Butch", 57, Farm(List("chicken")))))
       )
     }
   }
