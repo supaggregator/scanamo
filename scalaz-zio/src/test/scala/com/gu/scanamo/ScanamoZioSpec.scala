@@ -11,7 +11,7 @@ import org.scanamo.query._
 import org.scanamo.syntax._
 import org.scanamo.auto._
 import cats.implicits._
-import org.scanamo.result.ScanamoGetResult
+import org.scanamo.result.{ScanamoGetResult, ScanamoPutResult}
 import scalaz.zio.{IO, RTS}
 
 class ScanamoZioSpec extends FunSpec with Matchers {
@@ -476,12 +476,12 @@ class ScanamoZioSpec extends FunSpec with Matchers {
       } yield result
 
       unsafeRun(ScanamoZio.exec(client)(farmerOps)) should equal(
-        Some(Right(Farmer("McDonald", 156L, Farm(List("sheep", "cow")))))
+        Right(ScanamoPutResult(Farmer("McDonald", 156L, Farm(List("sheep", "cow")))))
       )
     }
   }
 
-  it("should return None when putting a new item asynchronously") {
+  it("should return Empty when putting a new item asynchronously") {
     case class Farm(animals: List[String])
     case class Farmer(name: String, age: Long, farm: Farm)
 
@@ -492,7 +492,7 @@ class ScanamoZioSpec extends FunSpec with Matchers {
       } yield result
 
       unsafeRun(ScanamoZio.exec(client)(farmerOps)) should equal(
-        None
+        Right(ScanamoPutResult.Empty)
       )
     }
   }

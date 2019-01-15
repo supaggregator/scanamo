@@ -9,7 +9,7 @@ import org.scanamo.ops.ScanamoOps
 import org.scanamo.query._
 import org.scanamo.syntax._
 import org.scanamo.auto._
-import org.scanamo.result.ScanamoGetResult
+import org.scanamo.result.{ScanamoGetResult, ScanamoPutResult}
 
 class ScanamoCatsSpec extends FunSpec with Matchers {
 
@@ -516,13 +516,13 @@ class ScanamoCatsSpec extends FunSpec with Matchers {
         result <- farmersTable.put(Farmer("McDonald", 50L, Farm(List("chicken", "cow"))))
       } yield result
 
-      ScanamoCats.exec[IO, Option[Either[DynamoReadError, Farmer]]](client)(farmerOps).unsafeRunSync should equal(
-        Some(Right(Farmer("McDonald", 156L, Farm(List("sheep", "cow")))))
+      ScanamoCats.exec[IO, Either[DynamoReadError, ScanamoPutResult[Farmer]]](client)(farmerOps).unsafeRunSync should equal(
+        Right(ScanamoPutResult(Farmer("McDonald", 156L, Farm(List("sheep", "cow")))))
       )
     }
   }
 
-  it("should return None when putting a new item asynchronously") {
+  it("should return empty when putting a new item asynchronously") {
     case class Farm(animals: List[String])
     case class Farmer(name: String, age: Long, farm: Farm)
 
@@ -532,8 +532,8 @@ class ScanamoCatsSpec extends FunSpec with Matchers {
         result <- farmersTable.put(Farmer("McDonald", 156L, Farm(List("sheep", "cow"))))
       } yield result
 
-      ScanamoCats.exec[IO, Option[Either[DynamoReadError, Farmer]]](client)(farmerOps).unsafeRunSync should equal(
-        None
+      ScanamoCats.exec[IO, Either[DynamoReadError, ScanamoPutResult[Farmer]]](client)(farmerOps).unsafeRunSync should equal(
+        Right(ScanamoPutResult.Empty)
       )
     }
   }

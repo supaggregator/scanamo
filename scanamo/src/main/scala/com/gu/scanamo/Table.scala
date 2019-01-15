@@ -1,13 +1,14 @@
 package org.scanamo
 
 import com.amazonaws.services.dynamodbv2.model.{BatchWriteItemResult, DeleteItemResult, QueryResult, ScanResult}
-import org.scanamo.result.ScanamoGetResult
+import org.scanamo.result.{ScanamoGetResult, ScanamoPutResult}
 import org.scanamo.DynamoResultStream.{QueryResultStream, ScanResultStream}
 import org.scanamo.error.DynamoReadError
 import org.scanamo.ops.ScanamoOps
 import org.scanamo.query._
 import org.scanamo.request.{ScanamoQueryOptions, ScanamoQueryRequest, ScanamoScanRequest}
 import org.scanamo.update.UpdateExpression
+
 import scala.collection.JavaConverters._
 
 /**
@@ -37,7 +38,7 @@ import scala.collection.JavaConverters._
   */
 case class Table[V: DynamoFormat](name: String) {
 
-  def put(v: V): ScanamoOps[Option[Either[DynamoReadError, V]]] = ScanamoFree.put(name)(v)
+  def put(v: V): ScanamoOps[Either[DynamoReadError, ScanamoPutResult[V]]] = ScanamoFree.put(name)(v)
   def putAll(vs: Set[V]): ScanamoOps[List[BatchWriteItemResult]] = ScanamoFree.putAll(name)(vs)
   def get(key: UniqueKey[_]): ScanamoOps[Either[DynamoReadError, ScanamoGetResult[V]]] = ScanamoFree.get[V](name)(key)
   def getAll(keys: UniqueKeys[_]): ScanamoOps[Set[Either[DynamoReadError, V]]] = ScanamoFree.getAll[V](name)(keys)

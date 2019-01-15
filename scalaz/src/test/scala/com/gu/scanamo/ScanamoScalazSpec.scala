@@ -11,7 +11,7 @@ import org.scanamo.auto._
 import scalaz.ioeffect.RTS
 import scalaz._
 import Scalaz._
-import org.scanamo.result.ScanamoGetResult
+import org.scanamo.result.{ScanamoGetResult, ScanamoPutResult}
 import shims._
 
 class ScanamoScalazSpec extends FunSpec with Matchers with BeforeAndAfterAll with RTS {
@@ -482,12 +482,12 @@ class ScanamoScalazSpec extends FunSpec with Matchers with BeforeAndAfterAll wit
       } yield result
 
       unsafePerformIO(ScanamoScalaz.exec(client)(farmerOps)) should equal(
-        Some(Right(Farmer("McDonald", 156L, Farm(List("sheep", "cow")))))
+        Right(ScanamoPutResult(Farmer("McDonald", 156L, Farm(List("sheep", "cow")))))
       )
     }
   }
 
-  it("should return None when putting a new item asynchronously") {
+  it("should return Empty when putting a new item asynchronously") {
     case class Farm(animals: List[String])
     case class Farmer(name: String, age: Long, farm: Farm)
 
@@ -498,7 +498,7 @@ class ScanamoScalazSpec extends FunSpec with Matchers with BeforeAndAfterAll wit
       } yield result
 
       unsafePerformIO(ScanamoScalaz.exec(client)(farmerOps)) should equal(
-        None
+        Right(ScanamoPutResult.Empty)
       )
     }
   }

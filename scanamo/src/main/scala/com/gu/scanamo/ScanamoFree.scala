@@ -1,6 +1,7 @@
 package org.scanamo
 
 import com.amazonaws.services.dynamodbv2.model.{PutRequest, WriteRequest, _}
+import org.scanamo.result.ScanamoPutResult
 import org.scanamo.result.ScanamoGetResult
 import org.scanamo.DynamoResultStream.{QueryResultStream, ScanResultStream}
 import org.scanamo.error.DynamoReadError
@@ -17,18 +18,16 @@ object ScanamoFree {
 
   private val batchSize = 25
 
-  def put[T](tableName: String)(item: T)(implicit f: DynamoFormat[T]): ScanamoOps[Option[Either[DynamoReadError, T]]] =
+  def put[T](tableName: String)(item: T)(implicit f: DynamoFormat[T]): ScanamoOps[Either[DynamoReadError, ScanamoPutResult[T]]] =
     ScanamoOps
       .put(
         ScanamoPutRequest(tableName, f.write(item), None)
       )
       .map { r =>
         if (Option(r.getAttributes).exists(_.asScala.nonEmpty)) {
-          Some(
-            f.read(new AttributeValue().withM(r.getAttributes))
-          )
+          f.read(new AttributeValue().withM(r.getAttributes)).map(ScanamoPutResult(_))
         } else {
-          None
+          Right(ScanamoPutResult.Empty)
         }
       }
 

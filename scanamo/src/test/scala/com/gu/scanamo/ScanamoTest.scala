@@ -12,7 +12,7 @@ import org.scanamo.ops.ScanamoOps
 import org.scanamo.query._
 import org.scanamo.syntax._
 import org.scanamo.auto._
-import org.scanamo.result.ScanamoGetResult
+import org.scanamo.result.{ScanamoGetResult, ScanamoPutResult}
 
 class ScanamoTest extends org.scalatest.FunSpec with org.scalatest.Matchers {
 
@@ -473,12 +473,12 @@ class ScanamoTest extends org.scalatest.FunSpec with org.scalatest.Matchers {
       } yield result
 
       Scanamo.exec(client)(farmerOps) should equal(
-        Some(Right(Farmer("McDonald", 156L, Farm(List("sheep", "cow")))))
+        Right(ScanamoPutResult(Farmer("McDonald", 156L, Farm(List("sheep", "cow")))))
       )
     }
   }
 
-  it("should return None when putting a new item asynchronously") {
+  it("should return Empty when putting a new item asynchronously") {
     case class Farm(animals: List[String])
     case class Farmer(name: String, age: Long, farm: Farm)
 
@@ -489,7 +489,7 @@ class ScanamoTest extends org.scalatest.FunSpec with org.scalatest.Matchers {
       } yield result
 
       Scanamo.exec(client)(farmerOps) should equal(
-        None
+        Right(ScanamoPutResult.Empty)
       )
     }
   }

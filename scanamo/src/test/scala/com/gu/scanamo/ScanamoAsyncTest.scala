@@ -9,7 +9,7 @@ import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType._
 import org.scanamo.query._
 import org.scanamo.syntax._
 import org.scanamo.auto._
-import org.scanamo.result.ScanamoGetResult
+import org.scanamo.result.{ScanamoGetResult, ScanamoPutResult}
 
 class ScanamoAsyncTest extends FunSpec with Matchers with BeforeAndAfterAll with ScalaFutures {
   implicit val defaultPatience =
@@ -490,12 +490,12 @@ class ScanamoAsyncTest extends FunSpec with Matchers with BeforeAndAfterAll with
       } yield result
 
       ScanamoAsync.exec(client)(farmerOps).futureValue should equal(
-        Some(Right(Farmer("McDonald", 156L, Farm(List("sheep", "cow")))))
+        Right(ScanamoPutResult(Farmer("McDonald", 156L, Farm(List("sheep", "cow")))))
       )
     }
   }
 
-  it("should return None when putting a new item asynchronously") {
+  it("should return Empty when putting a new item asynchronously") {
     case class Farm(animals: List[String])
     case class Farmer(name: String, age: Long, farm: Farm)
 
@@ -506,7 +506,7 @@ class ScanamoAsyncTest extends FunSpec with Matchers with BeforeAndAfterAll with
       } yield result
 
       ScanamoAsync.exec(client)(farmerOps).futureValue should equal(
-        None
+        Right(ScanamoPutResult.Empty)
       )
     }
   }
