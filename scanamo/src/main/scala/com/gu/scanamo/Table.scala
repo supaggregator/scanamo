@@ -30,10 +30,10 @@ import scala.collection.JavaConverters._
   * ...       Transport("Underground", "Metropolitan"),
   * ...       Transport("Underground", "Central")))
   * ...     results <- transport.query('mode -> "Underground" and ('line beginsWith "C"))
-  * ...   } yield results.toList
+  * ...   } yield results
   * ...   Scanamo.exec(client)(operations)
   * ... }
-  * List(Right(Transport(Underground,Central)), Right(Transport(Underground,Circle)))
+  * ScanamoGetResults(Set(Transport(Underground,Central), Transport(Underground,Circle)),List())
   * }}}
   */
 case class Table[V: DynamoFormat](name: String) {
@@ -67,10 +67,10 @@ case class Table[V: DynamoFormat](name: String) {
     * ...     _       <- farm.putAll(dataSet)
     * ...     _       <- farm.deleteAll('name -> dataSet.map(_.name))
     * ...     scanned <- farm.scan
-    * ...   } yield scanned.toList
+    * ...   } yield scanned
     * ...   Scanamo.exec(client)(operations)
     * ... }
-    * List()
+    * ScanamoGetResults(Set(),List())
     * }}}
     */
   def deleteAll(items: UniqueKeys[_]): ScanamoOps[List[BatchWriteItemResult]] = ScanamoFree.deleteAll(name)(items)
@@ -94,10 +94,10 @@ case class Table[V: DynamoFormat](name: String) {
     * ...       Transport("Underground", "Metropolitan", "Magenta"),
     * ...       Transport("Underground", "Central", "Red")))
     * ...     MagentaLine <- transport.index(i).query('colour -> "Magenta")
-    * ...   } yield MagentaLine.toList
+    * ...   } yield MagentaLine
     * ...   Scanamo.exec(client)(operations)
     * ... }
-    * List(Right(Transport(Underground,Metropolitan,Magenta)))
+    * ScanamoGetResults(Set(Transport(Underground,Metropolitan,Magenta)),List())
     * }}}
     *
     * {{{
@@ -115,10 +115,10 @@ case class Table[V: DynamoFormat](name: String) {
     * ...       GithubProject("guardian", "scanamo", "Scala", "Apache 2")
     * ...     ))
     * ...     scalaMIT <- githubProjects.index(i).query('language -> "Scala" and ('license -> "MIT"))
-    * ...   } yield scalaMIT.toList
+    * ...   } yield scalaMIT
     * ...   Scanamo.exec(client)(operations)
     * ... }
-    * List(Right(GithubProject(typelevel,cats,Scala,MIT)), Right(GithubProject(tpolecat,tut,Scala,MIT)), Right(GithubProject(localytics,sbt-dynamodb,Scala,MIT)))
+    * ScanamoGetResults(Set(GithubProject(typelevel,cats,Scala,MIT), GithubProject(tpolecat,tut,Scala,MIT), GithubProject(localytics,sbt-dynamodb,Scala,MIT)),List())
     * }}}
     */
   def index(indexName: String): SecondaryIndex[V] =
@@ -162,10 +162,10 @@ case class Table[V: DynamoFormat](name: String) {
     * ...     _ <- characters.update('name -> "The Doctor", append('actors -> "Capaldi"))
     * ...     _ <- characters.update('name -> "The Doctor", prepend('actors -> "McCoy"))
     * ...     results <- characters.scan()
-    * ...   } yield results.toList
+    * ...   } yield results
     * ...   Scanamo.exec(client)(operations)
     * ... }
-    * List(Right(Character(The Doctor,List(McCoy, Ecclestone, Tennant, Smith, Capaldi))))
+    * ScanamoGetResults(Set(Character(The Doctor,List(McCoy, Ecclestone, Tennant, Smith, Capaldi))),List())
     * }}}
     *
     * Appending or prepending creates the list if it does not yet exist:
@@ -178,10 +178,10 @@ case class Table[V: DynamoFormat](name: String) {
     * ...   val operations = for {
     * ...     _ <- characters.update('name -> "James Bond", append('actors -> "Craig"))
     * ...     results <- characters.query('name -> "James Bond")
-    * ...   } yield results.toList
+    * ...   } yield results
     * ...   Scanamo.exec(client)(operations)
     * ... }
-    * List(Right(Character(James Bond,List(Craig))))
+    * ScanamoGetResults(Set(Character(James Bond,List(Craig))),List())
     * }}}
     *
     * To concatenate a list to the front or end of an existing list, use appendAll/prependAll:
@@ -198,10 +198,10 @@ case class Table[V: DynamoFormat](name: String) {
     * ...     _ <- fruits.update('kind -> "watermelon", appendAll('sources -> List("China", "Turkey")))
     * ...     _ <- fruits.update('kind -> "watermelon", prependAll('sources -> List("Brazil")))
     * ...     results <- fruits.query('kind -> "watermelon")
-    * ...   } yield results.toList
+    * ...   } yield results
     * ...   Scanamo.exec(client)(operations)
     * ... }
-    * List(Right(Fruit(watermelon,List(Brazil, USA, China, Turkey))))
+    * ScanamoGetResults(Set(Fruit(watermelon,List(Brazil, USA, China, Turkey))),List())
     * }}}
     *
     * Multiple operations can also be performed in one call:
@@ -301,10 +301,10 @@ case class Table[V: DynamoFormat](name: String) {
     * ...       Transport("Underground", "Metropolitan"),
     * ...       Transport("Underground", "Central")))
     * ...     results <- transport.limit(1).query('mode -> "Underground" and ('line beginsWith "C"))
-    * ...   } yield results.toList
+    * ...   } yield results
     * ...   Scanamo.exec(client)(operations)
     * ... }
-    * List(Right(Transport(Underground,Central)))
+    * ScanamoGetResults(Set(Transport(Underground,Central)),List())
     * }}}
     */
   def limit(n: Int) = TableWithOptions[V](name, ScanamoQueryOptions.default).limit(n)
@@ -337,10 +337,10 @@ case class Table[V: DynamoFormat](name: String) {
     * Right(ScanamoSingleGetResult(City(US,Nashville)))
     *
     * >>> scan
-    * List(Right(City(US,Nashville)), Right(City(IT,Rome)), Right(City(IT,Siena)), Right(City(TZ,Dar es Salaam)))
+    * ScanamoGetResults(Set(City(US,Nashville), City(IT,Rome), City(IT,Siena), City(TZ,Dar es Salaam)),List())
     *
     * >>> query
-    * List(Right(City(IT,Rome)), Right(City(IT,Siena)))
+    * ScanamoGetResults(Set(City(IT,Rome), City(IT,Siena)),List())
     * }}}
     */
   def consistently = ConsistentlyReadTable(name)
@@ -379,9 +379,9 @@ case class Table[V: DynamoFormat](name: String) {
     * ...     _ <- lettersTable.given('greek beginsWith "gam").put(Letter("c", "gamma"))
     * ...     letters <- lettersTable.scan()
     * ...   } yield letters
-    * ...   Scanamo.exec(client)(ops).toList
+    * ...   Scanamo.exec(client)(ops)
     * ... }
-    * List(Right(Letter(b,beta)), Right(Letter(c,gamma)), Right(Letter(a,alpha)))
+    * ScanamoGetResults(Set(Letter(b,beta), Letter(c,gamma), Letter(a,alpha)),List())
     *
     * >>> import cats.implicits._
     * >>> case class Turnip(size: Int, description: Option[String])
@@ -390,13 +390,13 @@ case class Table[V: DynamoFormat](name: String) {
     * ...   val ops = for {
     * ...     _ <- turnipsTable.putAll(Set(Turnip(1, None), Turnip(1000, None)))
     * ...     initialTurnips <- turnipsTable.scan()
-    * ...     _ <- initialTurnips.flatMap(_.toOption).traverse(t =>
+    * ...     _ <- initialTurnips.values.toList.traverse(t =>
     * ...       turnipsTable.given('size > 500).put(t.copy(description = Some("Big turnip in the country."))))
     * ...     turnips <- turnipsTable.scan()
     * ...   } yield turnips
-    * ...   Scanamo.exec(client)(ops).toList
+    * ...   Scanamo.exec(client)(ops)
     * ... }
-    * List(Right(Turnip(1,None)), Right(Turnip(1000,Some(Big turnip in the country.))))
+    * ScanamoGetResults(Set(Turnip(1,None), Turnip(1000,Some(Big turnip in the country.))),List())
     * }}}
     *
     * Conditions can also make use of negation via `not`:
@@ -413,9 +413,9 @@ case class Table[V: DynamoFormat](name: String) {
     * ...     _ <- thingTable.given(Not(attributeExists('maybe))).put(Thing("b", Some(42)))
     * ...     things <- thingTable.scan()
     * ...   } yield things
-    * ...   Scanamo.exec(client)(ops).toList
+    * ...   Scanamo.exec(client)(ops)
     * ... }
-    * List(Right(Thing(b,Some(3))), Right(Thing(c,Some(42))), Right(Thing(a,None)))
+    * ScanamoGetResults(Set(Thing(b,Some(3)), Thing(c,Some(42)), Thing(a,None)),List())
     * }}}
     *
     * be combined with `and`
@@ -431,9 +431,9 @@ case class Table[V: DynamoFormat](name: String) {
     * ...     _ <- compoundTable.given(Condition('a -> "gamma") and attributeExists('maybe)).put(Compound("gamma", Some(42)))
     * ...     compounds <- compoundTable.scan()
     * ...   } yield compounds
-    * ...   Scanamo.exec(client)(ops).toList
+    * ...   Scanamo.exec(client)(ops)
     * ... }
-    * List(Right(Compound(beta,Some(3))), Right(Compound(alpha,None)), Right(Compound(gamma,None)))
+    * ScanamoGetResults(Set(Compound(beta,Some(3)), Compound(alpha,None), Compound(gamma,None)),List())
     * }}}
     *
     * or with `or`
@@ -448,9 +448,9 @@ case class Table[V: DynamoFormat](name: String) {
     * ...     _ <- choicesTable.given(Condition('description -> "cake") or Condition('description -> "death")).put(Choice(2, "victoria sponge"))
     * ...     choices <- choicesTable.scan()
     * ...   } yield choices
-    * ...   Scanamo.exec(client)(ops).toList
+    * ...   Scanamo.exec(client)(ops)
     * ... }
-    * List(Right(Choice(2,crumble)), Right(Choice(1,victoria sponge)), Right(Choice(3,custard)))
+    * ScanamoGetResults(Set(Choice(2,crumble), Choice(1,victoria sponge), Choice(3,custard)),List())
     * }}}
     *
     * The same forms of condition can be applied to deletions
@@ -465,9 +465,9 @@ case class Table[V: DynamoFormat](name: String) {
     * ...     _ <- gremlinsTable.given('wet -> true).delete('number -> 2)
     * ...     remainingGremlins <- gremlinsTable.scan()
     * ...   } yield remainingGremlins
-    * ...   Scanamo.exec(client)(ops).toList
+    * ...   Scanamo.exec(client)(ops)
     * ... }
-    * List(Right(Gremlin(1,false,true)))
+    * ScanamoGetResults(Set(Gremlin(1,false,true)),List())
     * }}}
     *
     * and updates
@@ -481,9 +481,9 @@ case class Table[V: DynamoFormat](name: String) {
     * ...     _ <- gremlinsTable.given('wet -> true).update('number -> 2, set('friendly -> false))
     * ...     remainingGremlins <- gremlinsTable.scan()
     * ...   } yield remainingGremlins
-    * ...   Scanamo.exec(client)(ops).toList
+    * ...   Scanamo.exec(client)(ops)
     * ... }
-    * List(Right(Gremlin(2,true,false)), Right(Gremlin(1,false,true)))
+    * ScanamoGetResults(Set(Gremlin(2,true,false), Gremlin(1,false,true)),List())
     * }}}
     *
     * Conditions can also be placed on nested attributes
@@ -527,7 +527,7 @@ case class Table[V: DynamoFormat](name: String) {
     * ...   } yield bears
     * ...   Scanamo.exec(client)(ops)
     * ... }
-    * List(Right(Bear(Pooh,honey)), Right(Bear(Yogi,picnic baskets)))
+    * ScanamoGetResults(Set(Bear(Pooh,honey), Bear(Yogi,picnic baskets)),List())
     * }}}
     *
     * Of course it works with queries too:
@@ -551,7 +551,7 @@ case class Table[V: DynamoFormat](name: String) {
     * ...   } yield events
     * ...   Scanamo.exec(client)(ops)
     * ... }
-    * List(Right(Event(play,print,600)), Right(Event(play,profile,100)))
+    * ScanamoGetResults(Set(Event(play,print,600), Event(play,profile,100)),List())
     * }}}
     *
     */
@@ -576,10 +576,10 @@ case class Table[V: DynamoFormat](name: String) {
     * ...   } yield bears
     * ...   Scanamo.exec(client)(ops)
     * ... }
-    * List(Right(Bear(Pooh,honey)), Right(Bear(Yogi,picnic baskets)))
+    * ScanamoGetResults(Set(Bear(Pooh,honey), Bear(Yogi,picnic baskets)),List())
     * }}}
     */
-  def scan(): ScanamoOps[List[Either[DynamoReadError, V]]] = ScanamoFree.scan[V](name)
+  def scan(): ScanamoOps[ScanamoGetResults[V]] = ScanamoFree.scan[V](name)
 
   /**
     * Scans the table and returns the raw DynamoDB result. Sometimes, one might want to
@@ -601,6 +601,7 @@ case class Table[V: DynamoFormat](name: String) {
     * >>> import org.scanamo.auto._
     * >>> import org.scanamo.query._
     * >>> import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType._
+    * >>> import org.scanamo.result.ScanamoGetResults
     *
     * >>> LocalDynamoDB.withRandomTable(client)('mode -> S, 'line -> S) { t =>
     * ...   val table = Table[Transport](t)
@@ -613,11 +614,11 @@ case class Table[V: DynamoFormat](name: String) {
     * ...     res <- table.limit(1).scan0
     * ...     uniqueKeyCondition = UniqueKeyCondition[AndEqualsCondition[KeyEquals[String], KeyEquals[String]]]
     * ...     lastKey = uniqueKeyCondition.fromAVMap(('mode, 'line), res.getLastEvaluatedKey.asScala.toMap)
-    * ...     ts <- lastKey.fold(List.empty[Either[DynamoReadError, Transport]].pure[ScanamoOps])(table.from(_).scan())
+    * ...     ts <- lastKey.fold(ScanamoGetResults.empty[Transport].pure[ScanamoOps])(table.from(_).scan())
     * ...   } yield ts
     * ...   Scanamo.exec(client)(ops)
     * ... }
-    * List(Right(Transport(Underground,Circle)), Right(Transport(Underground,Metropolitan)))
+    * ScanamoGetResults(Set(Transport(Underground,Circle), Transport(Underground,Metropolitan)),List())
     * }}}
     */
   def scan0: ScanamoOps[ScanResult] = ScanamoFree.scan0[V](name)
@@ -646,10 +647,10 @@ case class Table[V: DynamoFormat](name: String) {
     * ...   } yield linesBeginningWithC
     * ...   Scanamo.exec(client)(ops)
     * ... }
-    * List(Right(Transport(Underground,Central)), Right(Transport(Underground,Circle)))
+    * ScanamoGetResults(Set(Transport(Underground,Central), Transport(Underground,Circle)),List())
     * }}}
     */
-  def query(query: Query[_]): ScanamoOps[List[Either[DynamoReadError, V]]] = ScanamoFree.query[V](name)(query)
+  def query(query: Query[_]): ScanamoOps[ScanamoGetResults[V]] = ScanamoFree.query[V](name)(query)
 
   /**
     * Queries the table and returns the raw DynamoDB result. Sometimes, one might want to
@@ -671,6 +672,7 @@ case class Table[V: DynamoFormat](name: String) {
     * >>> import org.scanamo.auto._
     * >>> import org.scanamo.query._
     * >>> import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType._
+    * >>> import org.scanamo.result.ScanamoGetResults
     *
     * >>> LocalDynamoDB.withRandomTable(client)('mode -> S, 'line -> S) { t =>
     * ...   val table = Table[Transport](t)
@@ -686,11 +688,11 @@ case class Table[V: DynamoFormat](name: String) {
     * ...     res <- table.limit(1).query0('mode -> "Bus" and 'line -> "234")
     * ...     uniqueKeyCondition = UniqueKeyCondition[AndEqualsCondition[KeyEquals[String], KeyEquals[String]]]
     * ...     lastKey = uniqueKeyCondition.fromAVMap(('mode, 'line), res.getLastEvaluatedKey.asScala.toMap)
-    * ...     ts <- lastKey.fold(List.empty[Either[DynamoReadError, Transport]].pure[ScanamoOps])(table.from(_).scan())
+    * ...     ts <- lastKey.fold(ScanamoGetResults.empty[Transport].pure[ScanamoOps])(table.from(_).scan())
     * ...   } yield ts
     * ...   Scanamo.exec(client)(ops)
     * ... }
-    * List(Right(Transport(Bus,390)), Right(Transport(Underground,Central)), Right(Transport(Underground,Circle)), Right(Transport(Underground,Metropolitan)))
+    * ScanamoGetResults(Set(Transport(Bus,390), Transport(Underground,Central), Transport(Underground,Circle), Transport(Underground,Metropolitan)),List())
     * }}}
     */
   def query0(query: Query[_]): ScanamoOps[QueryResult] = ScanamoFree.query0[V](name)(query)
@@ -717,7 +719,7 @@ case class Table[V: DynamoFormat](name: String) {
     * ...   } yield (honeyBears, competitiveBears)
     * ...   Scanamo.exec(client)(ops)
     * ... }
-    * (List(Right(Bear(Pooh,honey,None))),List(Right(Bear(Yogi,picnic baskets,Some(Ranger Smith)))))
+    * (ScanamoGetResults(Set(Bear(Pooh,honey,None)),List()),ScanamoGetResults(Set(Bear(Yogi,picnic baskets,Some(Ranger Smith))),List()))
     *
     * >>> case class Station(line: String, name: String, zone: Int)
     *
@@ -738,7 +740,7 @@ case class Table[V: DynamoFormat](name: String) {
     * ...   } yield filteredStations
     * ...   Scanamo.exec(client)(ops)
     * ... }
-    * List(Right(Station(Metropolitan,Chalfont & Latimer,8)), Right(Station(Metropolitan,Chorleywood,7)), Right(Station(Metropolitan,Croxley,7)))
+    * ScanamoGetResults(Set(Station(Metropolitan,Chalfont & Latimer,8), Station(Metropolitan,Chorleywood,7), Station(Metropolitan,Croxley,7)),List())
     * }}}
     */
   def filter[C: ConditionExpression](condition: C) =
@@ -752,9 +754,9 @@ private[scanamo] case class ConsistentlyReadTable[V: DynamoFormat](tableName: St
     TableWithOptions(tableName, ScanamoQueryOptions.default).consistently.from(key)
   def filter[T](c: Condition[T]): TableWithOptions[V] =
     TableWithOptions(tableName, ScanamoQueryOptions.default).consistently.filter(c)
-  def scan(): ScanamoOps[List[Either[DynamoReadError, V]]] =
+  def scan(): ScanamoOps[ScanamoGetResults[V]] =
     TableWithOptions(tableName, ScanamoQueryOptions.default).consistently.scan()
-  def query(query: Query[_]): ScanamoOps[List[Either[DynamoReadError, V]]] =
+  def query(query: Query[_]): ScanamoOps[ScanamoGetResults[V]] =
     TableWithOptions(tableName, ScanamoQueryOptions.default).consistently.query(query)
 
   def get(key: UniqueKey[_]): ScanamoOps[Either[DynamoReadError, ScanamoGetResult[V]]] =
@@ -770,11 +772,11 @@ private[scanamo] case class TableWithOptions[V: DynamoFormat](tableName: String,
     copy(queryOptions = queryOptions.copy(exclusiveStartKey = Some(key.asAVMap.asJava)))
   def filter[T](c: Condition[T]): TableWithOptions[V] = copy(queryOptions = queryOptions.copy(filter = Some(c)))
 
-  def scan(): ScanamoOps[List[Either[DynamoReadError, V]]] =
+  def scan(): ScanamoOps[ScanamoGetResults[V]] =
     ScanResultStream.stream[V](ScanamoScanRequest(tableName, None, queryOptions)).map(_._1)
   def scan0: ScanamoOps[ScanResult] =
     ScanamoOps.scan(ScanamoScanRequest(tableName, None, queryOptions))
-  def query(query: Query[_]): ScanamoOps[List[Either[DynamoReadError, V]]] =
+  def query(query: Query[_]): ScanamoOps[ScanamoGetResults[V]] =
     QueryResultStream.stream[V](ScanamoQueryRequest(tableName, None, query, queryOptions)).map(_._1)
   def query0(query: Query[_]): ScanamoOps[QueryResult] =
     ScanamoOps.query(ScanamoQueryRequest(tableName, None, query, queryOptions))

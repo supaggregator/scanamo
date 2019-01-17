@@ -1,10 +1,11 @@
 package org.scanamo
 
 import org.scanamo.DynamoResultStream.{QueryResultStream, ScanResultStream}
-import org.scanamo.error.DynamoReadError
 import org.scanamo.ops.ScanamoOps
 import org.scanamo.query.{Condition, ConditionExpression, Query, UniqueKey, UniqueKeyCondition}
 import org.scanamo.request.{ScanamoQueryOptions, ScanamoQueryRequest, ScanamoScanRequest}
+import org.scanamo.result.ScanamoGetResults
+
 import scala.collection.JavaConverters._
 
 /**
@@ -39,10 +40,10 @@ sealed abstract class SecondaryIndex[V] {
     * ...   } yield antagonisticBears
     * ...   Scanamo.exec(client)(ops)
     * ... }
-    * List(Right(Bear(Paddington,marmalade sandwiches,Some(Mr Curry))), Right(Bear(Yogi,picnic baskets,Some(Ranger Smith))))
+    * ScanamoGetResults(Set(Bear(Paddington,marmalade sandwiches,Some(Mr Curry)), Bear(Yogi,picnic baskets,Some(Ranger Smith))),List())
     * }}}
     */
-  def scan(): ScanamoOps[List[Either[DynamoReadError, V]]]
+  def scan(): ScanamoOps[ScanamoGetResults[V]]
 
   /**
     * Run a query against keys in a secondary index
@@ -66,13 +67,13 @@ sealed abstract class SecondaryIndex[V] {
     * ...       GithubProject("guardian", "scanamo", "Scala", "Apache 2")
     * ...     ))
     * ...     scalaMIT <- githubProjects.index(i).query('language -> "Scala" and ('license -> "MIT"))
-    * ...   } yield scalaMIT.toList
+    * ...   } yield scalaMIT
     * ...   Scanamo.exec(client)(operations)
     * ... }
-    * List(Right(GithubProject(typelevel,cats,Scala,MIT)), Right(GithubProject(tpolecat,tut,Scala,MIT)), Right(GithubProject(localytics,sbt-dynamodb,Scala,MIT)))
+    * ScanamoGetResults(Set(GithubProject(typelevel,cats,Scala,MIT), GithubProject(tpolecat,tut,Scala,MIT), GithubProject(localytics,sbt-dynamodb,Scala,MIT)),List())
     * }}}
     */
-  def query(query: Query[_]): ScanamoOps[List[Either[DynamoReadError, V]]]
+  def query(query: Query[_]): ScanamoOps[ScanamoGetResults[V]]
 
   /**
     * Query or scan an index, limiting the number of items evaluated by Dynamo
@@ -99,10 +100,10 @@ sealed abstract class SecondaryIndex[V] {
     * ...     somethingBeginningWithBl <- transport.index(i).limit(1).query(
     * ...       ('mode -> "Underground" and ('colour beginsWith "Bl")).descending
     * ...     )
-    * ...   } yield somethingBeginningWithBl.toList
+    * ...   } yield somethingBeginningWithBl
     * ...   Scanamo.exec(client)(operations)
     * ... }
-    * List(Right(Transport(Underground,Picadilly,Blue)))
+    * ScanamoGetResults(Set(Transport(Underground,Picadilly,Blue)),List())
     * }}}
     */
   def limit(n: Int): SecondaryIndex[V]
@@ -133,10 +134,10 @@ sealed abstract class SecondaryIndex[V] {
     * ...     somethingBeginningWithC <- transport.index(i)
     * ...                                   .filter('line beginsWith ("C"))
     * ...                                   .query('mode -> "Underground")
-    * ...   } yield somethingBeginningWithC.toList
+    * ...   } yield somethingBeginningWithC
     * ...   Scanamo.exec(client)(operations)
     * ... }
-    * List(Right(Transport(Underground,Central,Red)), Right(Transport(Underground,Circle,Yellow)))
+    * ScanamoGetResults(Set(Transport(Underground,Central,Red), Transport(Underground,Circle,Yellow)),List())
     * }}}
     */
   def filter[C: ConditionExpression](condition: C): SecondaryIndex[V]

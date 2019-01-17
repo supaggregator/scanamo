@@ -3,10 +3,12 @@ package org.scanamo
 import java.util
 
 import cats.free.Free
+import cats.implicits._
 import com.amazonaws.services.dynamodbv2.model.{AttributeValue, QueryResult, ScanResult}
 import org.scanamo.error.DynamoReadError
 import org.scanamo.ops.{ScanamoOps, ScanamoOpsA}
 import org.scanamo.request.{ScanamoQueryRequest, ScanamoScanRequest}
+import org.scanamo.result.ScanamoGetResults
 
 import scala.collection.JavaConverters._
 
@@ -23,7 +25,7 @@ private[scanamo] trait DynamoResultStream[Req, Res] {
   def prepare(limit: Option[Int], lastEvaluatedKey: EvaluationKey): Req => Req =
     withExclusiveStartKey(lastEvaluatedKey).andThen(limit.map(withLimit).getOrElse(identity[Req](_)))
 
-  def stream[T: DynamoFormat](req: Req): ScanamoOps[(List[Either[DynamoReadError, T]], Option[EvaluationKey])] = {
+  def stream[T: DynamoFormat](req: Req): ScanamoOps[(ScanamoGetResults[T], Option[EvaluationKey])] = {
 
     def streamMore(req: Req): ScanamoOps[(List[Either[DynamoReadError, T]], Option[EvaluationKey])] =
       for {
@@ -45,7 +47,11 @@ private[scanamo] trait DynamoResultStream[Req, Res] {
               } yield (results._1 ::: more._1, more._2)
           )
       } yield result
-    streamMore(req)
+    streamMore(req).map { res =>
+      val (results, k) = res
+      val (errors, values) = results.separate
+      (ScanamoGetResults(values.toSet, errors), k)
+    }
   }
 }
 

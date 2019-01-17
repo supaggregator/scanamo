@@ -144,7 +144,7 @@ class ScanamoAlpakkaSpec extends FunSpecLike with BeforeAndAfterAll with Matcher
         fs <- farmers.scan
       } yield fs
 
-      ScanamoAlpakka.exec(alpakkaClient)(ops).futureValue should equal(List.empty)
+      ScanamoAlpakka.exec(alpakkaClient)(ops).futureValue should equal(ScanamoGetResults.empty)
     }
   }
 
@@ -159,7 +159,7 @@ class ScanamoAlpakkaSpec extends FunSpecLike with BeforeAndAfterAll with Matcher
         fs <- forecasts.scan
       } yield fs
 
-      ScanamoAlpakka.exec(alpakkaClient)(ops).futureValue should equal(List(Right(Forecast("London", "Sun"))))
+      ScanamoAlpakka.exec(alpakkaClient)(ops).futureValue should equal(ScanamoGetResults(Forecast("London", "Sun")))
     }
   }
 
@@ -177,7 +177,7 @@ class ScanamoAlpakkaSpec extends FunSpecLike with BeforeAndAfterAll with Matcher
       } yield results
 
       ScanamoAlpakka.exec(alpakkaClient)(ops).futureValue should equal(
-        List(Right(Forecast("London", "Rain", Some("umbrella"))), Right(Forecast("Birmingham", "Sun", None)))
+        ScanamoGetResults(Forecast("London", "Rain", Some("umbrella")), Forecast("Birmingham", "Sun", None))
       )
     }
   }
@@ -195,7 +195,7 @@ class ScanamoAlpakkaSpec extends FunSpecLike with BeforeAndAfterAll with Matcher
       } yield bs
 
       ScanamoAlpakka.exec(alpakkaClient)(ops).futureValue should equal(
-        List(Right(Bear("Pooh", "honey")), Right(Bear("Yogi", "picnic baskets")))
+        ScanamoGetResults(Bear("Pooh", "honey"), Bear("Yogi", "picnic baskets"))
       )
     }
 
@@ -207,7 +207,7 @@ class ScanamoAlpakkaSpec extends FunSpecLike with BeforeAndAfterAll with Matcher
         ls <- lemmings.scan
       } yield ls
 
-      ScanamoAlpakka.exec(alpakkaClient)(ops).futureValue.size should equal(100)
+      ScanamoAlpakka.exec(alpakkaClient)(ops).futureValue.values.size should equal(100)
     }
   }
 
@@ -221,7 +221,7 @@ class ScanamoAlpakkaSpec extends FunSpecLike with BeforeAndAfterAll with Matcher
         _ <- bears.put(Bear("Yogi", "picnic baskets"))
         bs <- bears.limit(1).scan
       } yield bs
-      ScanamoAlpakka.exec(alpakkaClient)(ops).futureValue should equal(List(Right(Bear("Pooh", "honey"))))
+      ScanamoAlpakka.exec(alpakkaClient)(ops).futureValue should equal(ScanamoGetResults(Bear("Pooh", "honey")))
     }
   }
 
@@ -237,7 +237,7 @@ class ScanamoAlpakkaSpec extends FunSpecLike with BeforeAndAfterAll with Matcher
         bs <- bears.index(i).limit(1).scan
       } yield bs
       ScanamoAlpakka.exec(alpakkaClient)(ops).futureValue should equal(
-        List(Right(Bear("Graham", "quinoa", Some("Guardianista"))))
+        ScanamoGetResults(Bear("Graham", "quinoa", Some("Guardianista")))
       )
     }
   }
@@ -259,7 +259,7 @@ class ScanamoAlpakkaSpec extends FunSpecLike with BeforeAndAfterAll with Matcher
       } yield bs
 
       ScanamoAlpakka.exec(alpakkaClient)(ops).futureValue should equal(
-        List(Right(Bear("Yogi", "picnic baskets", Some("Kanga"))), Right(Bear("Pooh", "honey", Some("Winnie"))))
+        ScanamoGetResults(Bear("Yogi", "picnic baskets", Some("Kanga")), Bear("Pooh", "honey", Some("Winnie")))
       )
     }
   }
@@ -280,11 +280,11 @@ class ScanamoAlpakkaSpec extends FunSpecLike with BeforeAndAfterAll with Matcher
 
       ScanamoAlpakka.exec(alpakkaClient)(ops).futureValue should equal(
         (
-          List(Right(Animal("Pig", 1)), Right(Animal("Pig", 2)), Right(Animal("Pig", 3))),
-          List(Right(Animal("Pig", 1)), Right(Animal("Pig", 2))),
-          List(Right(Animal("Pig", 2)), Right(Animal("Pig", 3))),
-          List(Right(Animal("Pig", 1)), Right(Animal("Pig", 2))),
-          List(Right(Animal("Pig", 2)), Right(Animal("Pig", 3)))
+          ScanamoGetResults(Animal("Pig", 1), Animal("Pig", 2), Animal("Pig", 3)),
+          ScanamoGetResults(Animal("Pig", 1), Animal("Pig", 2)),
+          ScanamoGetResults(Animal("Pig", 2), Animal("Pig", 3)),
+          ScanamoGetResults(Animal("Pig", 1), Animal("Pig", 2)),
+          ScanamoGetResults(Animal("Pig", 2), Animal("Pig", 3))
         )
       )
     }
@@ -304,7 +304,7 @@ class ScanamoAlpakkaSpec extends FunSpecLike with BeforeAndAfterAll with Matcher
       } yield ts
 
       ScanamoAlpakka.exec(alpakkaClient)(ops).futureValue should equal(
-        List(Right(Transport("Underground", "Central")), Right(Transport("Underground", "Circle")))
+        ScanamoGetResults(Transport("Underground", "Central"), Transport("Underground", "Circle"))
       )
     }
   }
@@ -326,7 +326,7 @@ class ScanamoAlpakkaSpec extends FunSpecLike with BeforeAndAfterAll with Matcher
       } yield rs
 
       ScanamoAlpakka.exec(alpakkaClient)(result).futureValue should equal(
-        List(Right(Transport("Underground", "Central")))
+        ScanamoGetResults(Transport("Underground", "Central"))
       )
     }
   }
@@ -356,7 +356,7 @@ class ScanamoAlpakkaSpec extends FunSpecLike with BeforeAndAfterAll with Matcher
         } yield rs
 
         ScanamoAlpakka.exec(alpakkaClient)(result).futureValue should equal(
-          List(Right(Transport("Underground", "Northern", "Black")))
+          ScanamoGetResults(Transport("Underground", "Northern", "Black"))
         )
     }
   }
@@ -390,11 +390,11 @@ class ScanamoAlpakkaSpec extends FunSpecLike with BeforeAndAfterAll with Matcher
 
       ScanamoAlpakka.exec(alpakkaClient)(ops).futureValue should equal(
         (
-          List(Right(CamdenTown), Right(GoldersGreen), Right(Hainault)),
-          List.empty,
-          List.empty,
-          List.empty,
-          List.empty
+          ScanamoGetResults(CamdenTown, GoldersGreen, Hainault),
+          ScanamoGetResults.empty,
+          ScanamoGetResults.empty,
+          ScanamoGetResults.empty,
+          ScanamoGetResults.empty
         )
       )
     }
@@ -411,7 +411,7 @@ class ScanamoAlpakkaSpec extends FunSpecLike with BeforeAndAfterAll with Matcher
         farmerWithNoAge <- farmersTable.filter(attributeNotExists('age)).query('firstName -> "Fred")
       } yield farmerWithNoAge
       ScanamoAlpakka.exec(alpakkaClient)(farmerOps).futureValue should equal(
-        List(Right(Farmer("Fred", "Perry", None)))
+        ScanamoGetResults(Farmer("Fred", "Perry", None))
       )
     }
   }
@@ -426,7 +426,7 @@ class ScanamoAlpakkaSpec extends FunSpecLike with BeforeAndAfterAll with Matcher
         rs <- rabbits.scan
       } yield rs
 
-      ScanamoAlpakka.exec(alpakkaClient)(result).futureValue.size should equal(100)
+      ScanamoAlpakka.exec(alpakkaClient)(result).futureValue.values.size should equal(100)
     }
   }
 
@@ -587,7 +587,7 @@ class ScanamoAlpakkaSpec extends FunSpecLike with BeforeAndAfterAll with Matcher
       } yield remainingGremlins
 
       ScanamoAlpakka.exec(alpakkaClient)(ops).futureValue should equal(
-        List(Right(Gremlin(1, false)))
+        ScanamoGetResults(Gremlin(1, false))
       )
     }
   }

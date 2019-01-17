@@ -125,7 +125,7 @@ class ScanamoAsyncTest extends FunSpec with Matchers with BeforeAndAfterAll with
         fs <- farmers.scan
       } yield fs
 
-      ScanamoAsync.exec(client)(ops).futureValue should equal(List.empty)
+      ScanamoAsync.exec(client)(ops).futureValue should equal(ScanamoGetResults.empty)
     }
   }
 
@@ -140,7 +140,7 @@ class ScanamoAsyncTest extends FunSpec with Matchers with BeforeAndAfterAll with
         fs <- forecasts.scan
       } yield fs
 
-      ScanamoAsync.exec(client)(ops).futureValue should equal(List(Right(Forecast("London", "Sun"))))
+      ScanamoAsync.exec(client)(ops).futureValue should equal(ScanamoGetResults(Forecast("London", "Sun")))
     }
   }
 
@@ -158,7 +158,7 @@ class ScanamoAsyncTest extends FunSpec with Matchers with BeforeAndAfterAll with
       } yield results
 
       ScanamoAsync.exec(client)(ops).futureValue should equal(
-        List(Right(Forecast("London", "Rain", Some("umbrella"))), Right(Forecast("Birmingham", "Sun", None)))
+        ScanamoGetResults(Forecast("London", "Rain", Some("umbrella")), Forecast("Birmingham", "Sun", None))
       )
     }
   }
@@ -176,7 +176,7 @@ class ScanamoAsyncTest extends FunSpec with Matchers with BeforeAndAfterAll with
       } yield bs
 
       ScanamoAsync.exec(client)(ops).futureValue should equal(
-        List(Right(Bear("Pooh", "honey")), Right(Bear("Yogi", "picnic baskets")))
+        ScanamoGetResults(Bear("Pooh", "honey"), Bear("Yogi", "picnic baskets"))
       )
     }
 
@@ -188,7 +188,7 @@ class ScanamoAsyncTest extends FunSpec with Matchers with BeforeAndAfterAll with
         ls <- lemmings.scan
       } yield ls
 
-      ScanamoAsync.exec(client)(ops).futureValue.size should equal(100)
+      ScanamoAsync.exec(client)(ops).futureValue.values.size should equal(100)
     }
   }
 
@@ -202,7 +202,7 @@ class ScanamoAsyncTest extends FunSpec with Matchers with BeforeAndAfterAll with
         _ <- bears.put(Bear("Yogi", "picnic baskets"))
         bs <- bears.limit(1).scan
       } yield bs
-      ScanamoAsync.exec(client)(ops).futureValue should equal(List(Right(Bear("Pooh", "honey"))))
+      ScanamoAsync.exec(client)(ops).futureValue should equal(ScanamoGetResults(Bear("Pooh", "honey")))
     }
   }
 
@@ -218,7 +218,7 @@ class ScanamoAsyncTest extends FunSpec with Matchers with BeforeAndAfterAll with
         bs <- bears.index(i).limit(1).scan
       } yield bs
       ScanamoAsync.exec(client)(ops).futureValue should equal(
-        List(Right(Bear("Graham", "quinoa", Some("Guardianista"))))
+        ScanamoGetResults(Bear("Graham", "quinoa", Some("Guardianista")))
       )
     }
   }
@@ -240,7 +240,7 @@ class ScanamoAsyncTest extends FunSpec with Matchers with BeforeAndAfterAll with
       } yield bs
 
       ScanamoAsync.exec(client)(ops).futureValue should equal(
-        List(Right(Bear("Yogi", "picnic baskets", Some("Kanga"))), Right(Bear("Pooh", "honey", Some("Winnie"))))
+        ScanamoGetResults(Bear("Yogi", "picnic baskets", Some("Kanga")), Bear("Pooh", "honey", Some("Winnie")))
       )
     }
   }
@@ -261,11 +261,11 @@ class ScanamoAsyncTest extends FunSpec with Matchers with BeforeAndAfterAll with
 
       ScanamoAsync.exec(client)(ops).futureValue should equal(
         (
-          List(Right(Animal("Pig", 1)), Right(Animal("Pig", 2)), Right(Animal("Pig", 3))),
-          List(Right(Animal("Pig", 1)), Right(Animal("Pig", 2))),
-          List(Right(Animal("Pig", 2)), Right(Animal("Pig", 3))),
-          List(Right(Animal("Pig", 1)), Right(Animal("Pig", 2))),
-          List(Right(Animal("Pig", 2)), Right(Animal("Pig", 3)))
+          ScanamoGetResults(Animal("Pig", 1), Animal("Pig", 2), Animal("Pig", 3)),
+          ScanamoGetResults(Animal("Pig", 1), Animal("Pig", 2)),
+          ScanamoGetResults(Animal("Pig", 2), Animal("Pig", 3)),
+          ScanamoGetResults(Animal("Pig", 1), Animal("Pig", 2)),
+          ScanamoGetResults(Animal("Pig", 2), Animal("Pig", 3))
         )
       )
     }
@@ -285,7 +285,7 @@ class ScanamoAsyncTest extends FunSpec with Matchers with BeforeAndAfterAll with
       } yield ts
 
       ScanamoAsync.exec(client)(ops).futureValue should equal(
-        List(Right(Transport("Underground", "Central")), Right(Transport("Underground", "Circle")))
+        ScanamoGetResults(Transport("Underground", "Central"), Transport("Underground", "Circle"))
       )
     }
   }
@@ -306,7 +306,7 @@ class ScanamoAsyncTest extends FunSpec with Matchers with BeforeAndAfterAll with
         rs <- transports.limit(1).query('mode -> "Underground" and ('line beginsWith "C"))
       } yield rs
 
-      ScanamoAsync.exec(client)(result).futureValue should equal(List(Right(Transport("Underground", "Central"))))
+      ScanamoAsync.exec(client)(result).futureValue should equal(ScanamoGetResults(Transport("Underground", "Central")))
     }
   }
 
@@ -335,7 +335,7 @@ class ScanamoAsyncTest extends FunSpec with Matchers with BeforeAndAfterAll with
         } yield rs
 
         ScanamoAsync.exec(client)(result).futureValue should equal(
-          List(Right(Transport("Underground", "Northern", "Black")))
+          ScanamoGetResults(Transport("Underground", "Northern", "Black"))
         )
     }
   }
@@ -369,11 +369,11 @@ class ScanamoAsyncTest extends FunSpec with Matchers with BeforeAndAfterAll with
 
       ScanamoAsync.exec(client)(ops).futureValue should equal(
         (
-          List(Right(CamdenTown), Right(GoldersGreen), Right(Hainault)),
-          List.empty,
-          List.empty,
-          List.empty,
-          List.empty
+          ScanamoGetResults(CamdenTown, GoldersGreen, Hainault),
+          ScanamoGetResults.empty,
+          ScanamoGetResults.empty,
+          ScanamoGetResults.empty,
+          ScanamoGetResults.empty
         )
       )
     }
@@ -390,7 +390,7 @@ class ScanamoAsyncTest extends FunSpec with Matchers with BeforeAndAfterAll with
         farmerWithNoAge <- farmersTable.filter(attributeNotExists('age)).query('firstName -> "Fred")
       } yield farmerWithNoAge
       ScanamoAsync.exec(client)(farmerOps).futureValue should equal(
-        List(Right(Farmer("Fred", "Perry", None)))
+        ScanamoGetResults(Farmer("Fred", "Perry", None))
       )
     }
   }
@@ -405,7 +405,7 @@ class ScanamoAsyncTest extends FunSpec with Matchers with BeforeAndAfterAll with
         rs <- rabbits.scan
       } yield rs
 
-      ScanamoAsync.exec(client)(result).futureValue.size should equal(100)
+      ScanamoAsync.exec(client)(result).futureValue.values.size should equal(100)
     }
   }
 
@@ -566,7 +566,7 @@ class ScanamoAsyncTest extends FunSpec with Matchers with BeforeAndAfterAll with
       } yield remainingGremlins
 
       ScanamoAsync.exec(client)(ops).futureValue should equal(
-        List(Right(Gremlin(1, false)))
+        ScanamoGetResults(Gremlin(1, false))
       )
     }
   }

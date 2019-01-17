@@ -121,7 +121,7 @@ class ScanamoZioSpec extends FunSpec with Matchers {
         fs <- farmers.scan
       } yield fs
 
-      unsafeRun(ScanamoZio.exec(client)(ops)) should equal(List.empty)
+      unsafeRun(ScanamoZio.exec(client)(ops)) should equal(ScanamoGetResults.empty)
     }
   }
 
@@ -136,7 +136,7 @@ class ScanamoZioSpec extends FunSpec with Matchers {
         fs <- forecasts.scan
       } yield fs
 
-      unsafeRun(ScanamoZio.exec(client)(ops)) should equal(List(Right(Forecast("London", "Sun"))))
+      unsafeRun(ScanamoZio.exec(client)(ops)) should equal(ScanamoGetResults(Forecast("London", "Sun")))
     }
   }
 
@@ -154,7 +154,7 @@ class ScanamoZioSpec extends FunSpec with Matchers {
       } yield results
 
       unsafeRun(ScanamoZio.exec(client)(ops)) should equal(
-        List(Right(Forecast("London", "Rain", Some("umbrella"))), Right(Forecast("Birmingham", "Sun", None)))
+        ScanamoGetResults(Forecast("London", "Rain", Some("umbrella")), Forecast("Birmingham", "Sun", None))
       )
     }
   }
@@ -172,7 +172,7 @@ class ScanamoZioSpec extends FunSpec with Matchers {
       } yield bs
 
       unsafeRun(ScanamoZio.exec(client)(ops)) should equal(
-        List(Right(Bear("Pooh", "honey")), Right(Bear("Yogi", "picnic baskets")))
+        ScanamoGetResults(Bear("Pooh", "honey"), Bear("Yogi", "picnic baskets"))
       )
     }
 
@@ -184,7 +184,7 @@ class ScanamoZioSpec extends FunSpec with Matchers {
         ls <- lemmings.scan
       } yield ls
 
-      unsafeRun(ScanamoZio.exec(client)(ops)).size should equal(100)
+      unsafeRun(ScanamoZio.exec(client)(ops)).values.size should equal(100)
     }
   }
 
@@ -198,7 +198,7 @@ class ScanamoZioSpec extends FunSpec with Matchers {
         _ <- bears.put(Bear("Yogi", "picnic baskets"))
         bs <- bears.limit(1).scan
       } yield bs
-      unsafeRun(ScanamoZio.exec(client)(ops)) should equal(List(Right(Bear("Pooh", "honey"))))
+      unsafeRun(ScanamoZio.exec(client)(ops)) should equal(ScanamoGetResults(Bear("Pooh", "honey")))
     }
   }
 
@@ -213,7 +213,7 @@ class ScanamoZioSpec extends FunSpec with Matchers {
         _ <- bears.put(Bear("Graham", "quinoa", Some("Guardianista")))
         bs <- bears.index(i).limit(1).scan
       } yield bs
-      unsafeRun(ScanamoZio.exec(client)(ops)) should equal(List(Right(Bear("Graham", "quinoa", Some("Guardianista")))))
+      unsafeRun(ScanamoZio.exec(client)(ops)) should equal(ScanamoGetResults(Bear("Graham", "quinoa", Some("Guardianista"))))
     }
   }
 
@@ -234,7 +234,7 @@ class ScanamoZioSpec extends FunSpec with Matchers {
       } yield bs
 
       unsafeRun(ScanamoZio.exec(client)(ops)) should equal(
-        List(Right(Bear("Yogi", "picnic baskets", Some("Kanga"))), Right(Bear("Pooh", "honey", Some("Winnie"))))
+        ScanamoGetResults(Bear("Yogi", "picnic baskets", Some("Kanga")), Bear("Pooh", "honey", Some("Winnie")))
       )
     }
   }
@@ -255,11 +255,11 @@ class ScanamoZioSpec extends FunSpec with Matchers {
 
       unsafeRun(ScanamoZio.exec(client)(ops)) should equal(
         (
-          List(Right(Animal("Pig", 1)), Right(Animal("Pig", 2)), Right(Animal("Pig", 3))),
-          List(Right(Animal("Pig", 1)), Right(Animal("Pig", 2))),
-          List(Right(Animal("Pig", 2)), Right(Animal("Pig", 3))),
-          List(Right(Animal("Pig", 1)), Right(Animal("Pig", 2))),
-          List(Right(Animal("Pig", 2)), Right(Animal("Pig", 3)))
+          ScanamoGetResults(Animal("Pig", 1), Animal("Pig", 2), Animal("Pig", 3)),
+          ScanamoGetResults(Animal("Pig", 1), Animal("Pig", 2)),
+          ScanamoGetResults(Animal("Pig", 2), Animal("Pig", 3)),
+          ScanamoGetResults(Animal("Pig", 1), Animal("Pig", 2)),
+          ScanamoGetResults(Animal("Pig", 2), Animal("Pig", 3))
         )
       )
     }
@@ -279,7 +279,7 @@ class ScanamoZioSpec extends FunSpec with Matchers {
       } yield ts
 
       unsafeRun(ScanamoZio.exec(client)(ops)) should equal(
-        List(Right(Transport("Underground", "Central")), Right(Transport("Underground", "Circle")))
+        ScanamoGetResults(Transport("Underground", "Central"), Transport("Underground", "Circle"))
       )
     }
   }
@@ -300,7 +300,7 @@ class ScanamoZioSpec extends FunSpec with Matchers {
         rs <- transports.limit(1).query('mode -> "Underground" and ('line beginsWith "C"))
       } yield rs
 
-      unsafeRun(ScanamoZio.exec(client)(result)) should equal(List(Right(Transport("Underground", "Central"))))
+      unsafeRun(ScanamoZio.exec(client)(result)) should equal(ScanamoGetResults(Transport("Underground", "Central")))
     }
   }
 
@@ -329,7 +329,7 @@ class ScanamoZioSpec extends FunSpec with Matchers {
         } yield rs
 
         unsafeRun(ScanamoZio.exec(client)(result)) should equal(
-          List(Right(Transport("Underground", "Northern", "Black")))
+          ScanamoGetResults(Transport("Underground", "Northern", "Black"))
         )
     }
   }
@@ -363,11 +363,11 @@ class ScanamoZioSpec extends FunSpec with Matchers {
 
       unsafeRun(ScanamoZio.exec(client)(ops)) should equal(
         (
-          List(Right(CamdenTown), Right(GoldersGreen), Right(Hainault)),
-          List.empty,
-          List.empty,
-          List.empty,
-          List.empty
+          ScanamoGetResults(CamdenTown, GoldersGreen, Hainault),
+          ScanamoGetResults.empty,
+          ScanamoGetResults.empty,
+          ScanamoGetResults.empty,
+          ScanamoGetResults.empty
         )
       )
     }
@@ -384,7 +384,7 @@ class ScanamoZioSpec extends FunSpec with Matchers {
         farmerWithNoAge <- farmersTable.filter(attributeNotExists('age)).query('firstName -> "Fred")
       } yield farmerWithNoAge
       unsafeRun(ScanamoZio.exec(client)(farmerOps)) should equal(
-        List(Right(Farmer("Fred", "Perry", None)))
+        ScanamoGetResults(Farmer("Fred", "Perry", None))
       )
     }
   }
@@ -399,7 +399,7 @@ class ScanamoZioSpec extends FunSpec with Matchers {
         rs <- rabbits.scan
       } yield rs
 
-      unsafeRun(ScanamoZio.exec(client)(result)).size should equal(100)
+      unsafeRun(ScanamoZio.exec(client)(result)).values.size should equal(100)
     }
   }
 
@@ -552,7 +552,7 @@ class ScanamoZioSpec extends FunSpec with Matchers {
       } yield remainingGremlins
 
       unsafeRun(ScanamoZio.exec(client)(ops)) should equal(
-        List(Right(Gremlin(1, false)))
+        ScanamoGetResults(Gremlin(1, false))
       )
     }
   }

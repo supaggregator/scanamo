@@ -124,7 +124,7 @@ class ScanamoCatsSpec extends FunSpec with Matchers {
         fs <- farmers.scan
       } yield fs
 
-      ScanamoCats.exec[IO, List[Either[DynamoReadError, Farmer]]](client)(ops).unsafeRunSync should equal(List.empty)
+      ScanamoCats.exec[IO, ScanamoGetResults[Farmer]](client)(ops).unsafeRunSync should equal(ScanamoGetResults.empty)
     }
   }
 
@@ -139,8 +139,8 @@ class ScanamoCatsSpec extends FunSpec with Matchers {
         fs <- forecasts.scan
       } yield fs
 
-      ScanamoCats.exec[IO, List[Either[DynamoReadError, Forecast]]](client)(ops).unsafeRunSync should equal(
-        List(Right(Forecast("London", "Sun")))
+      ScanamoCats.exec[IO, ScanamoGetResults[Forecast]](client)(ops).unsafeRunSync should equal(
+        ScanamoGetResults(Forecast("London", "Sun"))
       )
     }
   }
@@ -158,8 +158,8 @@ class ScanamoCatsSpec extends FunSpec with Matchers {
         results <- forecasts.scan()
       } yield results
 
-      ScanamoCats.exec[IO, List[Either[DynamoReadError, Forecast]]](client)(ops).unsafeRunSync should equal(
-        List(Right(Forecast("London", "Rain", Some("umbrella"))), Right(Forecast("Birmingham", "Sun", None)))
+      ScanamoCats.exec[IO, ScanamoGetResults[Forecast]](client)(ops).unsafeRunSync should equal(
+        ScanamoGetResults(Forecast("London", "Rain", Some("umbrella")), Forecast("Birmingham", "Sun", None))
       )
     }
   }
@@ -176,8 +176,8 @@ class ScanamoCatsSpec extends FunSpec with Matchers {
         bs <- bears.scan
       } yield bs
 
-      ScanamoCats.exec[IO, List[Either[DynamoReadError, Bear]]](client)(ops).unsafeRunSync should equal(
-        List(Right(Bear("Pooh", "honey")), Right(Bear("Yogi", "picnic baskets")))
+      ScanamoCats.exec[IO, ScanamoGetResults[Bear]](client)(ops).unsafeRunSync should equal(
+        ScanamoGetResults(Bear("Pooh", "honey"), Bear("Yogi", "picnic baskets"))
       )
     }
 
@@ -189,7 +189,7 @@ class ScanamoCatsSpec extends FunSpec with Matchers {
         ls <- lemmings.scan
       } yield ls
 
-      ScanamoCats.exec[IO, List[Either[DynamoReadError, Lemming]]](client)(ops).unsafeRunSync.size should equal(100)
+      ScanamoCats.exec[IO, ScanamoGetResults[Lemming]](client)(ops).unsafeRunSync.values.size should equal(100)
     }
   }
 
@@ -203,8 +203,8 @@ class ScanamoCatsSpec extends FunSpec with Matchers {
         _ <- bears.put(Bear("Yogi", "picnic baskets"))
         bs <- bears.limit(1).scan
       } yield bs
-      ScanamoCats.exec[IO, List[Either[DynamoReadError, Bear]]](client)(ops).unsafeRunSync should equal(
-        List(Right(Bear("Pooh", "honey")))
+      ScanamoCats.exec[IO, ScanamoGetResults[Bear]](client)(ops).unsafeRunSync should equal(
+        ScanamoGetResults(Bear("Pooh", "honey"))
       )
     }
   }
@@ -220,8 +220,8 @@ class ScanamoCatsSpec extends FunSpec with Matchers {
         _ <- bears.put(Bear("Graham", "quinoa", Some("Guardianista")))
         bs <- bears.index(i).limit(1).scan
       } yield bs
-      ScanamoCats.exec[IO, List[Either[DynamoReadError, Bear]]](client)(ops).unsafeRunSync should equal(
-        List(Right(Bear("Graham", "quinoa", Some("Guardianista"))))
+      ScanamoCats.exec[IO, ScanamoGetResults[Bear]](client)(ops).unsafeRunSync should equal(
+        ScanamoGetResults(Bear("Graham", "quinoa", Some("Guardianista")))
       )
     }
   }
@@ -242,8 +242,8 @@ class ScanamoCatsSpec extends FunSpec with Matchers {
         } yield res2 ::: res3
       } yield bs
 
-      ScanamoCats.exec[IO, List[Either[DynamoReadError, Bear]]](client)(ops).unsafeRunSync should equal(
-        List(Right(Bear("Yogi", "picnic baskets", Some("Kanga"))), Right(Bear("Pooh", "honey", Some("Winnie"))))
+      ScanamoCats.exec[IO, ScanamoGetResults[Bear]](client)(ops).unsafeRunSync should equal(
+        ScanamoGetResults(Bear("Yogi", "picnic baskets", Some("Kanga")), Bear("Pooh", "honey", Some("Winnie")))
       )
     }
   }
@@ -266,20 +266,20 @@ class ScanamoCatsSpec extends FunSpec with Matchers {
         .exec[
           IO,
           (
-            List[Either[org.scanamo.error.DynamoReadError, Animal]],
-            List[Either[org.scanamo.error.DynamoReadError, Animal]],
-            List[Either[org.scanamo.error.DynamoReadError, Animal]],
-            List[Either[org.scanamo.error.DynamoReadError, Animal]],
-            List[Either[org.scanamo.error.DynamoReadError, Animal]]
+            ScanamoGetResults[Animal],
+            ScanamoGetResults[Animal],
+            ScanamoGetResults[Animal],
+            ScanamoGetResults[Animal],
+            ScanamoGetResults[Animal]
           )
         ](client)(ops)
         .unsafeRunSync should equal(
         (
-          List(Right(Animal("Pig", 1)), Right(Animal("Pig", 2)), Right(Animal("Pig", 3))),
-          List(Right(Animal("Pig", 1)), Right(Animal("Pig", 2))),
-          List(Right(Animal("Pig", 2)), Right(Animal("Pig", 3))),
-          List(Right(Animal("Pig", 1)), Right(Animal("Pig", 2))),
-          List(Right(Animal("Pig", 2)), Right(Animal("Pig", 3)))
+          ScanamoGetResults(Animal("Pig", 1), Animal("Pig", 2), Animal("Pig", 3)),
+          ScanamoGetResults(Animal("Pig", 1), Animal("Pig", 2)),
+          ScanamoGetResults(Animal("Pig", 2), Animal("Pig", 3)),
+          ScanamoGetResults(Animal("Pig", 1), Animal("Pig", 2)),
+          ScanamoGetResults(Animal("Pig", 2), Animal("Pig", 3))
         )
       )
     }
@@ -298,8 +298,8 @@ class ScanamoCatsSpec extends FunSpec with Matchers {
         ts <- transports.query('mode -> "Underground" and ('line beginsWith "C"))
       } yield ts
 
-      ScanamoCats.exec[IO, List[Either[DynamoReadError, Transport]]](client)(ops).unsafeRunSync should equal(
-        List(Right(Transport("Underground", "Central")), Right(Transport("Underground", "Circle")))
+      ScanamoCats.exec[IO, ScanamoGetResults[Transport]](client)(ops).unsafeRunSync should equal(
+        ScanamoGetResults(Transport("Underground", "Central"), Transport("Underground", "Circle"))
       )
     }
   }
@@ -320,8 +320,8 @@ class ScanamoCatsSpec extends FunSpec with Matchers {
         rs <- transports.limit(1).query('mode -> "Underground" and ('line beginsWith "C"))
       } yield rs
 
-      ScanamoCats.exec[IO, List[Either[DynamoReadError, Transport]]](client)(result).unsafeRunSync should equal(
-        List(Right(Transport("Underground", "Central")))
+      ScanamoCats.exec[IO, ScanamoGetResults[Transport]](client)(result).unsafeRunSync should equal(
+        ScanamoGetResults(Transport("Underground", "Central"))
       )
     }
   }
@@ -350,8 +350,8 @@ class ScanamoCatsSpec extends FunSpec with Matchers {
             )
         } yield rs
 
-        ScanamoCats.exec[IO, List[Either[DynamoReadError, Transport]]](client)(result).unsafeRunSync should equal(
-          List(Right(Transport("Underground", "Northern", "Black")))
+        ScanamoCats.exec[IO, ScanamoGetResults[Transport]](client)(result).unsafeRunSync should equal(
+          ScanamoGetResults(Transport("Underground", "Northern", "Black"))
         )
     }
   }
@@ -387,20 +387,20 @@ class ScanamoCatsSpec extends FunSpec with Matchers {
         .exec[
           IO,
           (
-            List[Either[org.scanamo.error.DynamoReadError, Station]],
-            List[Either[org.scanamo.error.DynamoReadError, Station]],
-            List[Either[org.scanamo.error.DynamoReadError, Station]],
-            List[Either[org.scanamo.error.DynamoReadError, Station]],
-            List[Either[org.scanamo.error.DynamoReadError, Station]]
+            ScanamoGetResults[Station],
+            ScanamoGetResults[Station],
+            ScanamoGetResults[Station],
+            ScanamoGetResults[Station],
+            ScanamoGetResults[Station]
           )
         ](client)(ops)
         .unsafeRunSync should equal(
         (
-          List(Right(CamdenTown), Right(GoldersGreen), Right(Hainault)),
-          List.empty,
-          List.empty,
-          List.empty,
-          List.empty
+          ScanamoGetResults(CamdenTown, GoldersGreen, Hainault),
+          ScanamoGetResults.empty,
+          ScanamoGetResults.empty,
+          ScanamoGetResults.empty,
+          ScanamoGetResults.empty
         )
       )
     }
@@ -416,8 +416,8 @@ class ScanamoCatsSpec extends FunSpec with Matchers {
         _ <- farmersTable.put(Farmer("Fred", "McDonald", Some(54)))
         farmerWithNoAge <- farmersTable.filter(attributeNotExists('age)).query('firstName -> "Fred")
       } yield farmerWithNoAge
-      ScanamoCats.exec[IO, List[Either[DynamoReadError, Farmer]]](client)(farmerOps).unsafeRunSync should equal(
-        List(Right(Farmer("Fred", "Perry", None)))
+      ScanamoCats.exec[IO, ScanamoGetResults[Farmer]](client)(farmerOps).unsafeRunSync should equal(
+        ScanamoGetResults(Farmer("Fred", "Perry", None))
       )
     }
   }
@@ -432,7 +432,7 @@ class ScanamoCatsSpec extends FunSpec with Matchers {
         rs <- rabbits.scan
       } yield rs
 
-      ScanamoCats.exec[IO, List[Either[DynamoReadError, Rabbit]]](client)(result).unsafeRunSync.size should equal(100)
+      ScanamoCats.exec[IO, ScanamoGetResults[Rabbit]](client)(result).unsafeRunSync.values.size should equal(100)
     }
   }
 
@@ -591,15 +591,15 @@ class ScanamoCatsSpec extends FunSpec with Matchers {
     LocalDynamoDB.usingRandomTable(client)('number -> N) { t =>
       val gremlinsTable = Table[Gremlin](t)
 
-      val ops: ScanamoOps[List[Either[DynamoReadError, Gremlin]]] = for {
+      val ops: ScanamoOps[ScanamoGetResults[Gremlin]] = for {
         _ <- gremlinsTable.putAll(Set(Gremlin(1, false), Gremlin(2, true)))
         _ <- gremlinsTable.given('wet -> true).delete('number -> 1)
         _ <- gremlinsTable.given('wet -> true).delete('number -> 2)
         remainingGremlins <- gremlinsTable.scan()
       } yield remainingGremlins
 
-      ScanamoCats.exec[IO, List[Either[DynamoReadError, Gremlin]]](client)(ops).unsafeRunSync should equal(
-        List(Right(Gremlin(1, false)))
+      ScanamoCats.exec[IO, ScanamoGetResults[Gremlin]](client)(ops).unsafeRunSync should equal(
+        ScanamoGetResults(Gremlin(1, false))
       )
     }
   }

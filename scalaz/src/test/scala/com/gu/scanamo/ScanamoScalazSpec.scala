@@ -123,7 +123,7 @@ class ScanamoScalazSpec extends FunSpec with Matchers with BeforeAndAfterAll wit
         fs <- farmers.scan
       } yield fs
 
-      unsafePerformIO(ScanamoScalaz.exec(client)(ops)) should equal(List.empty)
+      unsafePerformIO(ScanamoScalaz.exec(client)(ops)) should equal(ScanamoGetResults.empty)
     }
   }
 
@@ -138,7 +138,7 @@ class ScanamoScalazSpec extends FunSpec with Matchers with BeforeAndAfterAll wit
         fs <- forecasts.scan
       } yield fs
 
-      unsafePerformIO(ScanamoScalaz.exec(client)(ops)) should equal(List(Right(Forecast("London", "Sun"))))
+      unsafePerformIO(ScanamoScalaz.exec(client)(ops)) should equal(ScanamoGetResults(Forecast("London", "Sun")))
     }
   }
 
@@ -156,7 +156,7 @@ class ScanamoScalazSpec extends FunSpec with Matchers with BeforeAndAfterAll wit
       } yield results
 
       unsafePerformIO(ScanamoScalaz.exec(client)(ops)) should equal(
-        List(Right(Forecast("London", "Rain", Some("umbrella"))), Right(Forecast("Birmingham", "Sun", None)))
+        ScanamoGetResults(Forecast("London", "Rain", Some("umbrella")), Forecast("Birmingham", "Sun", None))
       )
     }
   }
@@ -174,7 +174,7 @@ class ScanamoScalazSpec extends FunSpec with Matchers with BeforeAndAfterAll wit
       } yield bs
 
       unsafePerformIO(ScanamoScalaz.exec(client)(ops)) should equal(
-        List(Right(Bear("Pooh", "honey")), Right(Bear("Yogi", "picnic baskets")))
+        ScanamoGetResults(Bear("Pooh", "honey"), Bear("Yogi", "picnic baskets"))
       )
     }
 
@@ -188,7 +188,7 @@ class ScanamoScalazSpec extends FunSpec with Matchers with BeforeAndAfterAll wit
         ls <- lemmings.scan
       } yield ls
 
-      unsafePerformIO(ScanamoScalaz.exec(client)(ops)).size should equal(100)
+      unsafePerformIO(ScanamoScalaz.exec(client)(ops)).values.size should equal(100)
     }
   }
 
@@ -202,7 +202,7 @@ class ScanamoScalazSpec extends FunSpec with Matchers with BeforeAndAfterAll wit
         _ <- bears.put(Bear("Yogi", "picnic baskets"))
         bs <- bears.limit(1).scan
       } yield bs
-      unsafePerformIO(ScanamoScalaz.exec(client)(ops)) should equal(List(Right(Bear("Pooh", "honey"))))
+      unsafePerformIO(ScanamoScalaz.exec(client)(ops)) should equal(ScanamoGetResults(Bear("Pooh", "honey")))
     }
   }
 
@@ -218,7 +218,7 @@ class ScanamoScalazSpec extends FunSpec with Matchers with BeforeAndAfterAll wit
         bs <- bears.index(i).limit(1).scan
       } yield bs
       unsafePerformIO(ScanamoScalaz.exec(client)(ops)) should equal(
-        List(Right(Bear("Graham", "quinoa", Some("Guardianista"))))
+        ScanamoGetResults(Bear("Graham", "quinoa", Some("Guardianista")))
       )
     }
   }
@@ -240,7 +240,7 @@ class ScanamoScalazSpec extends FunSpec with Matchers with BeforeAndAfterAll wit
       } yield bs
 
       unsafePerformIO(ScanamoScalaz.exec(client)(ops)) should equal(
-        List(Right(Bear("Yogi", "picnic baskets", Some("Kanga"))), Right(Bear("Pooh", "honey", Some("Winnie"))))
+        ScanamoGetResults(Bear("Yogi", "picnic baskets", Some("Kanga")), Bear("Pooh", "honey", Some("Winnie")))
       )
     }
   }
@@ -261,11 +261,11 @@ class ScanamoScalazSpec extends FunSpec with Matchers with BeforeAndAfterAll wit
 
       unsafePerformIO(ScanamoScalaz.exec(client)(ops)) should equal(
         (
-          List(Right(Animal("Pig", 1)), Right(Animal("Pig", 2)), Right(Animal("Pig", 3))),
-          List(Right(Animal("Pig", 1)), Right(Animal("Pig", 2))),
-          List(Right(Animal("Pig", 2)), Right(Animal("Pig", 3))),
-          List(Right(Animal("Pig", 1)), Right(Animal("Pig", 2))),
-          List(Right(Animal("Pig", 2)), Right(Animal("Pig", 3)))
+          ScanamoGetResults(Animal("Pig", 1), Animal("Pig", 2), Animal("Pig", 3)),
+          ScanamoGetResults(Animal("Pig", 1), Animal("Pig", 2)),
+          ScanamoGetResults(Animal("Pig", 2), Animal("Pig", 3)),
+          ScanamoGetResults(Animal("Pig", 1), Animal("Pig", 2)),
+          ScanamoGetResults(Animal("Pig", 2), Animal("Pig", 3))
         )
       )
     }
@@ -285,7 +285,7 @@ class ScanamoScalazSpec extends FunSpec with Matchers with BeforeAndAfterAll wit
       } yield ts
 
       unsafePerformIO(ScanamoScalaz.exec(client)(ops)) should equal(
-        List(Right(Transport("Underground", "Central")), Right(Transport("Underground", "Circle")))
+        ScanamoGetResults(Transport("Underground", "Central"), Transport("Underground", "Circle"))
       )
     }
   }
@@ -306,7 +306,7 @@ class ScanamoScalazSpec extends FunSpec with Matchers with BeforeAndAfterAll wit
         rs <- transports.limit(1).query('mode -> "Underground" and ('line beginsWith "C"))
       } yield rs
 
-      unsafePerformIO(ScanamoScalaz.exec(client)(result)) should equal(List(Right(Transport("Underground", "Central"))))
+      unsafePerformIO(ScanamoScalaz.exec(client)(result)) should equal(ScanamoGetResults(Transport("Underground", "Central")))
     }
   }
 
@@ -335,7 +335,7 @@ class ScanamoScalazSpec extends FunSpec with Matchers with BeforeAndAfterAll wit
         } yield rs
 
         unsafePerformIO(ScanamoScalaz.exec(client)(result)) should equal(
-          List(Right(Transport("Underground", "Northern", "Black")))
+          ScanamoGetResults(Transport("Underground", "Northern", "Black"))
         )
     }
   }
@@ -369,11 +369,11 @@ class ScanamoScalazSpec extends FunSpec with Matchers with BeforeAndAfterAll wit
 
       unsafePerformIO(ScanamoScalaz.exec(client)(ops)) should equal(
         (
-          List(Right(CamdenTown), Right(GoldersGreen), Right(Hainault)),
-          List.empty,
-          List.empty,
-          List.empty,
-          List.empty
+          ScanamoGetResults(CamdenTown, GoldersGreen, Hainault),
+          ScanamoGetResults.empty,
+          ScanamoGetResults.empty,
+          ScanamoGetResults.empty,
+          ScanamoGetResults.empty
         )
       )
     }
@@ -390,7 +390,7 @@ class ScanamoScalazSpec extends FunSpec with Matchers with BeforeAndAfterAll wit
         farmerWithNoAge <- farmersTable.filter(attributeNotExists('age)).query('firstName -> "Fred")
       } yield farmerWithNoAge
       unsafePerformIO(ScanamoScalaz.exec(client)(farmerOps)) should equal(
-        List(Right(Farmer("Fred", "Perry", None)))
+        ScanamoGetResults(Farmer("Fred", "Perry", None))
       )
     }
   }
@@ -405,7 +405,7 @@ class ScanamoScalazSpec extends FunSpec with Matchers with BeforeAndAfterAll wit
         rs <- rabbits.scan
       } yield rs
 
-      unsafePerformIO(ScanamoScalaz.exec(client)(result)).size should equal(100)
+      unsafePerformIO(ScanamoScalaz.exec(client)(result)).values.size should equal(100)
     }
   }
 
@@ -558,7 +558,7 @@ class ScanamoScalazSpec extends FunSpec with Matchers with BeforeAndAfterAll wit
       } yield remainingGremlins
 
       unsafePerformIO(ScanamoScalaz.exec(client)(ops)) should equal(
-        List(Right(Gremlin(1, false)))
+        ScanamoGetResults(Gremlin(1, false))
       )
     }
   }

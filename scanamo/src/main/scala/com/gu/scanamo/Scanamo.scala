@@ -31,10 +31,10 @@ object Scanamo {
     * ...       Transport("Underground", "Metropolitan"),
     * ...       Transport("Underground", "Central")))
     * ...     results <- transport.query('mode -> "Underground" and ('line beginsWith "C"))
-    * ...   } yield results.toList
+    * ...   } yield results
     * ...   Scanamo.exec(client)(operations)
     * ... }
-    * List(Right(Transport(Underground,Central)), Right(Transport(Underground,Circle)))
+    * ScanamoGetResults(Set(Transport(Underground,Central), Transport(Underground,Circle)),List())
     * }}}
     */
   def exec[A](client: AmazonDynamoDB)(op: ScanamoOps[A]): A = op.foldMap(ScanamoInterpreters.id(client))
