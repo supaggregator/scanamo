@@ -11,7 +11,7 @@ import org.scanamo.auto._
 import scalaz.ioeffect.RTS
 import scalaz._
 import Scalaz._
-import org.scanamo.result.{ScanamoGetResult, ScanamoPutResult}
+import org.scanamo.result.{ScanamoGetResult, ScanamoGetResults, ScanamoPutResult}
 import shims._
 
 class ScanamoScalazSpec extends FunSpec with Matchers with BeforeAndAfterAll with RTS {
@@ -427,8 +427,8 @@ class ScanamoScalazSpec extends FunSpec with Matchers with BeforeAndAfterAll wit
         fs2 <- farmers.getAll('name -> Set("Boggis", "Bean"))
       } yield (fs1, fs2))) should equal(
         (
-          Set(Right(Farmer("Boggis", 43, Farm(List("chicken")))), Right(Farmer("Bean", 55, Farm(List("turkey"))))),
-          Set(Right(Farmer("Boggis", 43, Farm(List("chicken")))), Right(Farmer("Bean", 55, Farm(List("turkey")))))
+          ScanamoGetResults(Farmer("Boggis", 43, Farm(List("chicken"))), Farmer("Bean", 55, Farm(List("turkey")))),
+          ScanamoGetResults(Farmer("Boggis", 43, Farm(List("chicken"))), Farmer("Bean", 55, Farm(List("turkey"))))
         )
       )
     }
@@ -440,7 +440,7 @@ class ScanamoScalazSpec extends FunSpec with Matchers with BeforeAndAfterAll wit
       unsafePerformIO(ScanamoScalaz.exec(client)(for {
         _ <- doctors.putAll(Set(Doctor("McCoy", 9), Doctor("Ecclestone", 10), Doctor("Ecclestone", 11)))
         ds <- doctors.getAll(('actor and 'regeneration) -> Set("McCoy" -> 9, "Ecclestone" -> 11))
-      } yield ds)) should equal(Set(Right(Doctor("McCoy", 9)), Right(Doctor("Ecclestone", 11))))
+      } yield ds)) should equal(ScanamoGetResults(Doctor("McCoy", 9), Doctor("Ecclestone", 11)))
     }
   }
 
@@ -453,7 +453,7 @@ class ScanamoScalazSpec extends FunSpec with Matchers with BeforeAndAfterAll wit
       unsafePerformIO(ScanamoScalaz.exec(client)(for {
         _ <- farmsTable.putAll(farms)
         fs <- farmsTable.getAll(UniqueKeys(KeyList('id, farms.map(_.id))))
-      } yield fs)) should equal(farms.map(Right(_)))
+      } yield fs)) should equal(ScanamoGetResults(farms))
     }
   }
 
@@ -466,7 +466,7 @@ class ScanamoScalazSpec extends FunSpec with Matchers with BeforeAndAfterAll wit
       unsafePerformIO(ScanamoScalaz.exec(client)(for {
         _ <- farmsTable.putAll(farms)
         fs <- farmsTable.consistently.getAll(UniqueKeys(KeyList('id, farms.map(_.id))))
-      } yield fs)) should equal(farms.map(Right(_)))
+      } yield fs)) should equal(ScanamoGetResults(farms))
     }
   }
 

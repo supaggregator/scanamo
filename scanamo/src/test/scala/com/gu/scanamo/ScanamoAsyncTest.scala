@@ -9,7 +9,7 @@ import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType._
 import org.scanamo.query._
 import org.scanamo.syntax._
 import org.scanamo.auto._
-import org.scanamo.result.{ScanamoGetResult, ScanamoPutResult}
+import org.scanamo.result.{ScanamoGetResult, ScanamoGetResults, ScanamoPutResult}
 
 class ScanamoAsyncTest extends FunSpec with Matchers with BeforeAndAfterAll with ScalaFutures {
   implicit val defaultPatience =
@@ -429,8 +429,8 @@ class ScanamoAsyncTest extends FunSpec with Matchers with BeforeAndAfterAll with
         } yield (fs1, fs2))
         .futureValue should equal(
         (
-          Set(Right(Farmer("Boggis", 43, Farm(List("chicken")))), Right(Farmer("Bean", 55, Farm(List("turkey"))))),
-          Set(Right(Farmer("Boggis", 43, Farm(List("chicken")))), Right(Farmer("Bean", 55, Farm(List("turkey")))))
+          ScanamoGetResults(Farmer("Boggis", 43, Farm(List("chicken"))), Farmer("Bean", 55, Farm(List("turkey")))),
+          ScanamoGetResults(Farmer("Boggis", 43, Farm(List("chicken"))), Farmer("Bean", 55, Farm(List("turkey"))))
         )
       )
     }
@@ -444,7 +444,7 @@ class ScanamoAsyncTest extends FunSpec with Matchers with BeforeAndAfterAll with
           _ <- doctors.putAll(Set(Doctor("McCoy", 9), Doctor("Ecclestone", 10), Doctor("Ecclestone", 11)))
           ds <- doctors.getAll(('actor and 'regeneration) -> Set("McCoy" -> 9, "Ecclestone" -> 11))
         } yield ds)
-        .futureValue should equal(Set(Right(Doctor("McCoy", 9)), Right(Doctor("Ecclestone", 11))))
+        .futureValue should equal(ScanamoGetResults(Doctor("McCoy", 9), Doctor("Ecclestone", 11)))
     }
   }
 
@@ -459,7 +459,7 @@ class ScanamoAsyncTest extends FunSpec with Matchers with BeforeAndAfterAll with
           _ <- farmsTable.putAll(farms)
           fs <- farmsTable.getAll(UniqueKeys(KeyList('id, farms.map(_.id))))
         } yield fs)
-        .futureValue should equal(farms.map(Right(_)))
+        .futureValue should equal(ScanamoGetResults(farms))
     }
   }
 
@@ -474,7 +474,7 @@ class ScanamoAsyncTest extends FunSpec with Matchers with BeforeAndAfterAll with
           _ <- farmsTable.putAll(farms)
           fs <- farmsTable.consistently.getAll(UniqueKeys(KeyList('id, farms.map(_.id))))
         } yield fs)
-        .futureValue should equal(farms.map(Right(_)))
+        .futureValue should equal(ScanamoGetResults(farms))
     }
   }
 

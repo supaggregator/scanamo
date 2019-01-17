@@ -1,14 +1,14 @@
 package org.scanamo
 
 import com.amazonaws.services.dynamodbv2.model.{PutRequest, WriteRequest, _}
-import org.scanamo.result.ScanamoPutResult
-import org.scanamo.result.ScanamoGetResult
+import org.scanamo.result.{ScanamoGetResult, ScanamoGetResults, ScanamoPutResult}
 import org.scanamo.DynamoResultStream.{QueryResultStream, ScanResultStream}
 import org.scanamo.error.DynamoReadError
 import org.scanamo.ops.ScanamoOps
 import org.scanamo.query._
 import org.scanamo.request._
 import org.scanamo.update.UpdateExpression
+import cats.implicits._
 
 object ScanamoFree {
 
@@ -86,7 +86,7 @@ object ScanamoFree {
       .getOrElse(Right(ScanamoGetResult.Empty))
 
 
-  def getAll[T: DynamoFormat](tableName: String)(keys: UniqueKeys[_]): ScanamoOps[Set[Either[DynamoReadError, T]]] =
+  def getAll[T: DynamoFormat](tableName: String)(keys: UniqueKeys[_]): ScanamoOps[ScanamoGetResults[T]] =
     keys.asAVMap
       .grouped(batchSize)
       .toList
@@ -100,11 +100,16 @@ object ScanamoFree {
           )
         )
       }
-      .map(_.flatMap(_.getResponses.get(tableName).asScala.toSet.map(read[T])).toSet)
+      .map { batchResults =>
+        val (errors, values) = batchResults
+          .flatMap(_.getResponses.get(tableName).asScala.map(read[T]))
+          .separate
+        ScanamoGetResults(values.toSet, errors)
+      }
 
   def getAllWithConsistency[T: DynamoFormat](
     tableName: String
-  )(keys: UniqueKeys[_]): ScanamoOps[Set[Either[DynamoReadError, T]]] =
+  )(keys: UniqueKeys[_]): ScanamoOps[ScanamoGetResults[T]] =
     keys.asAVMap
       .grouped(batchSize)
       .toList
@@ -118,7 +123,12 @@ object ScanamoFree {
           )
         )
       }
-      .map(_.flatMap(_.getResponses.get(tableName).asScala.toSet.map(read[T])).toSet)
+      .map { batchResults =>
+        val (errors, values) = batchResults
+          .flatMap(_.getResponses.get(tableName).asScala.map(read[T]))
+          .separate
+        ScanamoGetResults(values.toSet, errors)
+      }
 
   def delete(tableName: String)(key: UniqueKey[_]): ScanamoOps[DeleteItemResult] =
     ScanamoOps.delete(ScanamoDeleteRequest(tableName, key.asAVMap, None))
